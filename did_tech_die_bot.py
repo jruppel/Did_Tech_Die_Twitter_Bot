@@ -1,4 +1,5 @@
 import tweepy
+import time
 import constants
 import did_tech_die_cfb
 
@@ -10,6 +11,7 @@ access_token_secret=constants.twitter_access_token_secret
 client = tweepy.Client(consumer_key=consumer_key,consumer_secret=consumer_secret,
 access_token=access_token,access_token_secret=access_token_secret)
 # Todo: get today's date, get week # from date, check if today is football
+current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
 def create_cfb_tweet(year, day, season_type):
     # Get CFB Game data
@@ -24,5 +26,4 @@ def create_cfb_tweet(year, day, season_type):
     #print(cfb_game_data)
 
 #Todo: if total games is week #, create tweet
-def get_total_games(year):
-    cfb_record_data = did_tech_die_cfb.get_record(2021)
+print(current_time)
