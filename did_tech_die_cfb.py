@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import re
 import time
 from turtle import bye
+from webbrowser import get
 import cfbd
 from cfbd.rest import ApiException
 from pprint import pprint
@@ -24,17 +25,18 @@ all_bye_weeks = []
 
 def get_calendar_data():
     try:
-        calendar_data = api_instance.get_calendar(year=2021)
+        calendar_data = api_instance.get_calendar(year=2019)
         return calendar_data
     except ApiException as e:
         print("Exception when calling GamesApi->get_calendar: %s\n" % e)
 
-def get_game_week(calendar_data):
+def get_game_week():
+    calendar_data = get_calendar_data()
     #Iterate thru year calendar
     for i in range(len(calendar_data)):
         #Assign the month, day, year of week's start and end date 
         start_date = time.strptime(calendar_data[i].first_game_start[:10], "%Y-%m-%d")
-        current_date = time.strptime("2021-12-27", "%Y-%m-%d") #testing
+        current_date = time.strptime("2019-11-30", "%Y-%m-%d") #testing
         end_date = time.strptime(calendar_data[i].last_game_start[:10], "%Y-%m-%d")
         #
         if current_date >= start_date and current_date <= end_date:
@@ -45,7 +47,7 @@ def get_game_week(calendar_data):
 def get_game_data(week, season_type):
     try:
         # Games and results
-        api_response = api_instance.get_games(year=2021, week=week, season_type=season_type, team=team)
+        api_response = api_instance.get_games(year=2019, week=week, season_type=season_type, team=team)
         game_data = api_response[0]
         return game_data
     except ApiException as e:
@@ -58,7 +60,7 @@ def get_game_data(week, season_type):
 def get_bye_weeks():
     #Iterate thru total games played, game data starts at week 1
     #Todo: get range of regular season
-    for i in range(1, 14):
+    for i in range(1, 16):
         #Bye weeks only happen during the regaular season
         week_data = get_game_data(i, "regular")
         #Each week in which there is no game data is a bye
@@ -68,40 +70,44 @@ def get_bye_weeks():
     return all_bye_weeks
 
 def get_total_weeks_played():
-    game_week = get_game_week(get_calendar_data())
+    game_week = get_game_week()
     total_weeks = game_week[0]
     if game_week[1] == 'postseason':
+        #Postseason is week 16
         total_weeks = total_weeks + 15     
     return total_weeks
 
-#Todo
+#factor in get_bye_weeks data in total games(?)
 def get_total_games_played():
     total_weeks = total_games = get_total_weeks_played()
-    bye_weeks = get_bye_weeks()
-    for i in bye_weeks:
-        if total_weeks > i:
+    for i in range(1, total_weeks+1):
+        #Get all regular season game data
+        game_data = get_game_data(i, "regular")
+        #Get postseason data if week 16
+        if i == 16:
+            game_data = get_game_data(1, "postseason")
+        #Game data exists with final scores
+        if game_data == None or game_data.home_points == None or game_data.away_points == None:
             total_games = total_games - 1
-    print(total_weeks)
-    print(total_games)
-    print(bye_weeks)
-
-    #for i in bye_weeks:
-     #   if 
-    #try:
-       # Team records
-    #    api_response = api_instance.get_team_records(year=year, team=team)
-    #    record_data = api_response[0]
-    #    total_games = record_data.total["games"]
-    #    return total_games
-    #except ApiException as e:
-    #    print("Exception when calling GamesApi->get_team_records: %s\n" % e)   
+    return total_games
 
 def game_is_final():
-    final = False
-    #Checks if total games is total weeks
-    if get_total_games_played() == get_total_weeks_played():
-        final = True
-    return final
+    game_is_final = final
+    bye_weeks = get_bye_weeks()
+    total_weeks = get_total_weeks_played()
+    total_games_and_byes = get_total_games_played()
+    for i in bye_weeks:
+        if total_weeks == i:
+            print("Tech is in a bye week. No final score needed.")
+        if total_weeks > i:
+            #print("After Bye Week: " + str(i))
+            total_games_and_byes = total_games_and_byes + bye_weeks.count(i)
+    if total_games_and_byes == total_weeks:
+        print("Game is Final!")
+        game_is_final = True
+    else:
+        print("Game is not Final!")
+    return game_is_final
 
 def get_result(game_data):
     if game_data.home_team == "Louisiana Tech":
@@ -116,4 +122,6 @@ def get_result(game_data):
             result = 'L'
     return result
 
-get_total_games_played()
+#print(get_total_weeks_played())
+#print(get_total_games_played())
+#print(game_is_final())
