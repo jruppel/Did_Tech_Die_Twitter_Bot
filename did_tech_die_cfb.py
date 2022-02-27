@@ -18,7 +18,8 @@ configuration.api_key_prefix['Authorization'] = 'Bearer'
 # create an instance of the API class
 api_instance = cfbd.GamesApi(cfbd.ApiClient(configuration))
 team = 'Louisiana Tech'
-current_date = time.gmtime()
+#current_date = time.gmtime()
+current_date = time.strptime("2019-11-30", "%Y-%m-%d")
 year = current_date.tm_year
 final = False
 all_bye_weeks = []
@@ -36,7 +37,6 @@ def get_game_week():
     for i in range(len(calendar_data)):
         #Assign the month, day, year of week's start and end date 
         start_date = time.strptime(calendar_data[i].first_game_start[:10], "%Y-%m-%d")
-        current_date = time.strptime("2019-11-30", "%Y-%m-%d") #testing
         end_date = time.strptime(calendar_data[i].last_game_start[:10], "%Y-%m-%d")
         #
         if current_date >= start_date and current_date <= end_date:
@@ -55,6 +55,18 @@ def get_game_data(week, season_type):
     except IndexError as e:
         pass
         #print("Exception when calling CFBGamesApi->get_games: %s\n" % e)
+
+def today_is_football():
+    gameday = False
+    game_week = get_game_week()
+    game_data = get_game_data(game_week[0], game_week[1])
+    game_start = time.strptime(game_data.start_date[:10], "%Y-%m-%d")
+    print("Checking if today is football")
+    if game_week == None or game_start != current_date:
+        print("Today is not a Tech game day")
+    else:
+        gameday = True
+    return gameday
 
 #Determine how many bye weeks have happened up to the total games played
 def get_bye_weeks():
@@ -103,10 +115,10 @@ def game_is_final():
             #print("After Bye Week: " + str(i))
             total_games_and_byes = total_games_and_byes + bye_weeks.count(i)
     if total_games_and_byes == total_weeks:
-        print("Game is Final!")
+        print("Game is final!")
         game_is_final = True
     else:
-        print("Game is not Final!")
+        print("Game is not final!")
     return game_is_final
 
 def get_result(game_data):
