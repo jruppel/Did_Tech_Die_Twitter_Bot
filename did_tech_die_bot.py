@@ -1,3 +1,4 @@
+from calendar import c
 import tweepy
 import constants
 import did_tech_die_cfb
@@ -17,20 +18,21 @@ cfb_is_today_gameday = did_tech_die_cfb.is_today_gameday()
 
 def create_cfb_tweet():
     # Get CFB Game data
-    print("Checking if game is final.")
-    cfb_game_is_final = did_tech_die_cfb.game_is_final()
-    if cfb_game_is_final and cfb_is_today_gameday:
-        cfb_game_result = did_tech_die_cfb.get_result(cfb_game_data)
-        print("Crafting tweet.")
-        #Create tweet
-        #Todo: include sport, teams, and score in tweet
-        if cfb_game_result == 'L':
-            response = client.create_tweet(text='Yes')
-        if cfb_game_result == 'W':
-            response = client.create_tweet(text='No')
-        cfb_tweets = cfb_tweets + 1
-    print(response)
+    if cfb_is_today_gameday:
+        cfb_game_is_final = did_tech_die_cfb.game_is_final()
+        if cfb_game_is_final:
+            cfb_game_result = did_tech_die_cfb.get_result(cfb_game_data)
+            print("Crafting tweet.")
+            #Create tweet
+            #Todo: include sport, teams, and score in tweet
+            if cfb_game_result == 'L':
+                response = client.create_tweet(text='Yes')
+            if cfb_game_result == 'W':
+                response = client.create_tweet(text='No')
+            print(response)
 
-#create_cfb_tweet()
+create_cfb_tweet()
 #Todo: check if cfb game is final on game days after some time interval 
 #Todo: when game is final: tweet and stop checking if game is final until the next game week
+#print(cfb_game_data)
+#print(cfb_is_today_gameday)

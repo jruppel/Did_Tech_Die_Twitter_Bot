@@ -19,7 +19,7 @@ configuration.api_key_prefix['Authorization'] = 'Bearer'
 api_instance = cfbd.GamesApi(cfbd.ApiClient(configuration))
 team = 'Louisiana Tech'
 #current_date = time.gmtime()
-current_date = time.strptime("2019-11-30", "%Y-%m-%d")
+current_date = time.strptime("2019-09-01", "%Y-%m-%d")
 year = current_date.tm_year
 final = False
 all_bye_weeks = []
@@ -60,12 +60,15 @@ def is_today_gameday():
     gameday = False
     game_week = get_game_week()
     game_data = get_game_data(game_week[0], game_week[1])
-    game_start = time.strptime(game_data.start_date[:10], "%Y-%m-%d")
-    print("Checking if today is football")
-    if game_week == None or game_start != current_date:
-        print("Today is not a Tech game day")
+    if game_data == None:
+        print("Tech is on a bye week!")
     else:
-        gameday = True
+        game_start = time.strptime(game_data.start_date[:10], "%Y-%m-%d")
+        if game_start != current_date:
+            print("Tech gameday is not today!")
+        else:
+            print("Tech gameday is today!")
+            gameday = True
     return gameday
 
 #Determine how many bye weeks have happened up to the total games played
@@ -104,13 +107,16 @@ def get_total_games_played():
     return total_games
 
 def game_is_final():
+    print("Checking if game is final.")
     game_is_final = final
     bye_weeks = get_bye_weeks()
     total_weeks = get_total_weeks_played()
     total_games_and_byes = get_total_games_played()
+    if total_weeks in bye_weeks:
+        print("Tech is in a bye week. No final score this week.")
     for i in bye_weeks:
-        if total_weeks == i:
-            print("Tech is in a bye week. No final score needed.")
+    #    if total_weeks == i:
+    #        print("Tech is in a bye week. No final score this week.")
         if total_weeks > i:
             #print("After Bye Week: " + str(i))
             total_games_and_byes = total_games_and_byes + bye_weeks.count(i)
@@ -137,3 +143,4 @@ def get_result(game_data):
 #print(get_total_weeks_played())
 #print(get_total_games_played())
 #print(game_is_final())
+#print(get_game_data(1, 'regular'))
