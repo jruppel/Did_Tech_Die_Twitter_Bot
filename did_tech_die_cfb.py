@@ -56,7 +56,7 @@ def get_game_data(week, season_type):
         pass
         #print("Exception when calling CFBGamesApi->get_games: %s\n" % e)
 
-def today_is_football():
+def is_today_gameday():
     gameday = False
     game_week = get_game_week()
     game_data = get_game_data(game_week[0], game_week[1])
