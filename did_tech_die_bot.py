@@ -37,14 +37,14 @@ def create_cfb_tweet():
                 #Todo: include sport, teams, and score in tweet
                 if cfb_game_result == 'L':
                     if home_team == did_tech_die_cfb.team:
-                        response = client.create_tweet(text='Yes\n' + '🏈 Tech ' + home_pts + ' - ' + away_team + ' ' + away_pts)
+                        response = client.create_tweet(text='Yes.\n' + '🏈 ' + away_team + ' ' + away_pts + ', ' + home_team + ' ' + home_pts)
                     else:
-                        response = client.create_tweet(text='No\n' + '🏈 Tech ' + away_pts + ' - ' + home_team + ' ' + home_pts)
+                        response = client.create_tweet(text='Yes.\n' + '🏈 ' + home_team + ' ' + home_pts + ', ' + away_team + ' ' + away_pts)
                 if cfb_game_result == 'W':
                     if home_team == did_tech_die_cfb.team:
-                        response = client.create_tweet(text='No\n' + '🏈 Tech ' + home_pts + ' - ' + away_team + ' ' + away_pts)
+                        response = client.create_tweet(text='No.\n' + '🏈 ' + home_team + ' ' + home_pts + ', ' + away_team + ' ' + away_pts)
                     else:
-                        response = client.create_tweet(text='Yes\n' + '🏈 Tech ' + away_pts + ' - ' + home_team + ' ' + home_pts)
+                        response = client.create_tweet(text='No.\n' + '🏈 ' + away_team + ' ' + away_pts + ', ' + home_team + ' ' + home_pts)
                 print(response)
 
 create_cfb_tweet()

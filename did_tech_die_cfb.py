@@ -13,7 +13,7 @@ configuration.api_key_prefix['Authorization'] = 'Bearer'
 api_instance = cfbd.GamesApi(cfbd.ApiClient(configuration))
 team = 'Louisiana Tech'
 #current_date = time.gmtime()
-current_date = time.strptime("2019-09-07", "%Y-%m-%d")
+current_date = time.strptime("2019-09-14", "%Y-%m-%d")
 year = current_date.tm_year
 
 def get_calendar_data():
