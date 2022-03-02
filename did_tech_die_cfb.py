@@ -1,13 +1,7 @@
 from __future__ import print_function
-import calendar
-from dataclasses import dataclass
-import re
 import time
-from turtle import bye
-from webbrowser import get
 import cfbd
 from cfbd.rest import ApiException
-from pprint import pprint
 import constants
 
 # Configure API key authorization: ApiKeyAuth
@@ -19,10 +13,8 @@ configuration.api_key_prefix['Authorization'] = 'Bearer'
 api_instance = cfbd.GamesApi(cfbd.ApiClient(configuration))
 team = 'Louisiana Tech'
 #current_date = time.gmtime()
-current_date = time.strptime("2019-09-01", "%Y-%m-%d")
+current_date = time.strptime("2019-09-07", "%Y-%m-%d")
 year = current_date.tm_year
-final = False
-all_bye_weeks = []
 
 def get_calendar_data():
     try:
@@ -56,79 +48,32 @@ def get_game_data(week, season_type):
         pass
         #print("Exception when calling CFBGamesApi->get_games: %s\n" % e)
 
-def is_today_gameday():
+def is_today_gameday(game_data):
+    print("Checking if gameday is today")
     gameday = False
-    game_week = get_game_week()
-    game_data = get_game_data(game_week[0], game_week[1])
     if game_data == None:
-        print("Tech is on a bye week!")
+        print("Tech is on a bye week")
     else:
         game_start = time.strptime(game_data.start_date[:10], "%Y-%m-%d")
         if game_start != current_date:
-            print("Tech gameday is not today!")
+            print("Tech gameday is not today")
         else:
-            print("Tech gameday is today!")
+            print("Tech gameday is toda!")
             gameday = True
     return gameday
 
-#Determine how many bye weeks have happened up to the total games played
-def get_bye_weeks():
-    #Iterate thru total games played, game data starts at week 1
-    #Todo: get range of regular season
-    for i in range(1, 16):
-        #Bye weeks only happen during the regaular season
-        week_data = get_game_data(i, "regular")
-        #Each week in which there is no game data is a bye
-        if week_data == None:
-            #Store previous week's number and add 1
-            all_bye_weeks.append(get_game_data(i-1, "regular").week+1)
-    return all_bye_weeks
-
-def get_total_weeks_played():
-    game_week = get_game_week()
-    total_weeks = game_week[0]
-    if game_week[1] == 'postseason':
-        #Postseason is week 16
-        total_weeks = total_weeks + 15     
-    return total_weeks
-
-#factor in get_bye_weeks data in total games(?)
-def get_total_games_played():
-    total_weeks = total_games = get_total_weeks_played()
-    for i in range(1, total_weeks+1):
-        #Get all regular season game data
-        game_data = get_game_data(i, "regular")
-        #Get postseason data if week 16
-        if i == 16:
-            game_data = get_game_data(1, "postseason")
-        #Game data exists with final scores
-        if game_data == None or game_data.home_points == None or game_data.away_points == None:
-            total_games = total_games - 1
-    return total_games
-
-def game_is_final():
-    print("Checking if game is final.")
-    game_is_final = final
-    bye_weeks = get_bye_weeks()
-    total_weeks = get_total_weeks_played()
-    total_games_and_byes = get_total_games_played()
-    if total_weeks in bye_weeks:
-        print("Tech is in a bye week. No final score this week.")
-    for i in bye_weeks:
-    #    if total_weeks == i:
-    #        print("Tech is in a bye week. No final score this week.")
-        if total_weeks > i:
-            #print("After Bye Week: " + str(i))
-            total_games_and_byes = total_games_and_byes + bye_weeks.count(i)
-    if total_games_and_byes == total_weeks:
-        print("Game is final!")
+def game_is_final(game_data):
+    print("Checking if game is final")
+    game_is_final = False
+    if game_data.home_points and game_data.away_points:
+        print("Game is final")
         game_is_final = True
     else:
-        print("Game is not final!")
+        print("Game is not final")
     return game_is_final
 
 def get_result(game_data):
-    if game_data.home_team == "Louisiana Tech":
+    if game_data.home_team == team:
         if game_data.home_points > game_data.away_points:
             result = 'W'
         else:
