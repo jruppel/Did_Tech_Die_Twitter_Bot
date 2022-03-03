@@ -1,3 +1,4 @@
+import re
 import tweepy
 import constants
 import did_tech_die_cfb
@@ -7,13 +8,9 @@ consumer_key=constants.twitter_consumer_key
 consumer_secret=constants.twitter_consumer_secret
 access_token=constants.twitter_access_token
 access_token_secret=constants.twitter_access_token_secret
-client = tweepy.Client(consumer_key=consumer_key,consumer_secret=consumer_secret,
+bearer_token=constants.twitter_bearer_token
+client = tweepy.Client(bearer_token=bearer_token, consumer_key=consumer_key,consumer_secret=consumer_secret,
 access_token=access_token,access_token_secret=access_token_secret)
-
-#cfb_game_week = did_tech_die_cfb.get_game_week()
-#cfb_game_data = did_tech_die_cfb.get_game_data(cfb_game_week[0], cfb_game_week[1])
-#cfb_is_today_gameday = did_tech_die_cfb.is_today_gameday()
-#cfb_tweets = cfb_game_week[0] - 1
 
 def create_cfb_tweet():
     cfb_game_week = did_tech_die_cfb.get_game_week()
@@ -32,20 +29,27 @@ def create_cfb_tweet():
                 away_team = cfb_game_data.away_team
                 home_pts = str(cfb_game_data.home_points)
                 away_pts = str(cfb_game_data.away_points)
-                print("Crafting tweet")
+                recent_tweets = client.get_users_tweets(id=1353975070134329344, tweet_fields=["id"], user_auth=True)
+                print(recent_tweets)
                 #Create tweet
                 #Todo: include sport, teams, and score in tweet
                 if cfb_game_result == 'L':
                     if home_team == did_tech_die_cfb.team:
-                        response = client.create_tweet(text='Yes.\n' + '🏈 ' + away_team + ' ' + away_pts + ', ' + home_team + ' ' + home_pts)
+                        new_tweet = str('Yes.\n' + '🏈 ' + away_team + ' ' + away_pts + ', ' + home_team + ' ' + home_pts)
+                        #Todo: check if new_tweet was already tweeted
+                        if any(new_tweet not in tweets for tweets in recent_tweets.data):
+                            print("Crafting tweet")
+                            response = client.create_tweet(text=new_tweet)
                     else:
                         response = client.create_tweet(text='Yes.\n' + '🏈 ' + home_team + ' ' + home_pts + ', ' + away_team + ' ' + away_pts)
                 if cfb_game_result == 'W':
                     if home_team == did_tech_die_cfb.team:
-                        response = client.create_tweet(text='No.\n' + '🏈 ' + home_team + ' ' + home_pts + ', ' + away_team + ' ' + away_pts)
+                        tweet = 'No.\n' + '🏈 ' + home_team + ' ' + home_pts + ', ' + away_team + ' ' + away_pts
+                        if recent_tweets.meta['result_count'] == 0:
+                            response = client.create_tweet(text=tweet)
                     else:
                         response = client.create_tweet(text='No.\n' + '🏈 ' + away_team + ' ' + away_pts + ', ' + home_team + ' ' + home_pts)
-                print(response)
+                
 
 create_cfb_tweet()
 #Todo: check if cfb game is final on game days after some time interval 

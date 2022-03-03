@@ -13,12 +13,12 @@ configuration.api_key_prefix['Authorization'] = 'Bearer'
 api_instance = cfbd.GamesApi(cfbd.ApiClient(configuration))
 team = 'Louisiana Tech'
 #current_date = time.gmtime()
-current_date = time.strptime("2019-09-14", "%Y-%m-%d")
+current_date = time.strptime("2021-09-18", "%Y-%m-%d")
 year = current_date.tm_year
 
 def get_calendar_data():
     try:
-        calendar_data = api_instance.get_calendar(year=2019)
+        calendar_data = api_instance.get_calendar(year=2021)
         return calendar_data
     except ApiException as e:
         print("Exception when calling GamesApi->get_calendar: %s\n" % e)
@@ -39,7 +39,7 @@ def get_game_week():
 def get_game_data(week, season_type):
     try:
         # Games and results
-        api_response = api_instance.get_games(year=2019, week=week, season_type=season_type, team=team)
+        api_response = api_instance.get_games(year=2021, week=week, season_type=season_type, team=team)
         game_data = api_response[0]
         return game_data
     except ApiException as e:
@@ -58,7 +58,7 @@ def is_today_gameday(game_data):
         if game_start != current_date:
             print("Tech gameday is not today")
         else:
-            print("Tech gameday is toda!")
+            print("Tech gameday is today!")
             gameday = True
     return gameday
 
