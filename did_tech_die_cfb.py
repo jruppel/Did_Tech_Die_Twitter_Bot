@@ -13,25 +13,26 @@ configuration.api_key_prefix['Authorization'] = 'Bearer'
 api_instance = cfbd.GamesApi(cfbd.ApiClient(configuration))
 team = 'Louisiana Tech'
 #current_date = time.gmtime()
-current_date = time.strptime("2021-11-18", "%Y-%m-%d")
+current_date = time.strptime("2021-11-18", "%Y-%m-%d") #testing
 year = current_date.tm_year
 
 def get_calendar_data():
     try:
-        calendar_data = api_instance.get_calendar(year=2021)
+        calendar_data = api_instance.get_calendar(year=year)
         return calendar_data
     except ApiException as e:
         print("Exception when calling GamesApi->get_calendar: %s\n" % e)
 
 def get_game_week():
     calendar_data = get_calendar_data()
-    #Iterate thru year calendar
+    #Iterate thru this year's football calendar
     for i in range(len(calendar_data)):
         #Assign the month, day, year of week's start and end date 
         start_date = time.strptime(calendar_data[i].first_game_start[:10], "%Y-%m-%d")
         end_date = time.strptime(calendar_data[i].last_game_start[:10], "%Y-%m-%d")
-        #
+        #Check if current date is between week's start and end date
         if current_date >= start_date and current_date <= end_date:
+            #If so, assign week & season_type from calendar
             week = calendar_data[i].week
             season_type = calendar_data[i].season_type
             return week, season_type
@@ -39,7 +40,7 @@ def get_game_week():
 def get_game_data(week, season_type):
     try:
         # Games and results
-        api_response = api_instance.get_games(year=2021, week=week, season_type=season_type, team=team)
+        api_response = api_instance.get_games(year=year, week=week, season_type=season_type, team=team)
         game_data = api_response[0]
         return game_data
     except ApiException as e:
