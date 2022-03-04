@@ -1,3 +1,4 @@
+from logging import raiseExceptions
 import re
 import tweepy
 import constants
@@ -20,35 +21,27 @@ def create_cfb_tweet():
         cfb_is_today_gameday = did_tech_die_cfb.is_today_gameday(cfb_game_data)
         #Checking if game day is today
         if cfb_is_today_gameday:
-            cfb_game_is_final = did_tech_die_cfb.game_is_final(cfb_game_data)
+            cfb_game_is_final = did_tech_die_cfb.is_game_final(cfb_game_data)
             #Checking if final score is posted
             if cfb_game_is_final:
-                # Get CFB Game data
-                cfb_game_result = did_tech_die_cfb.get_result(cfb_game_data)
-                home_team = cfb_game_data.home_team
-                away_team = cfb_game_data.away_team
-                home_pts = str(cfb_game_data.home_points)
-                away_pts = str(cfb_game_data.away_points)
-                recent_tweets = client.get_users_tweets(id=1353975070134329344, tweet_fields=["id"], user_auth=True)
-                print(recent_tweets)
+                print("Checking if tweet already exists...")
+                # Get CFB Game and Tweet data
+                new_tweet = did_tech_die_cfb.get_resulting_tweet(cfb_game_data)
+                print("New tweet:\n" + new_tweet + "\n")
+                #Get bot's recent tweets
+                recent_tweets = client.get_users_tweets(id=constants.twitter_user_id, user_auth=True).data
+                #No recent tweets
+                if recent_tweets != None:
+                    for tweet in range(len(recent_tweets)):
+                        print("Recent tweet " + str(tweet+1) + ":\n" + recent_tweets[tweet]["text"] + "\n")
+                        if recent_tweets[tweet]["text"] == new_tweet:
+                            print("Duplicate tweet exists! No tweets to create!")
+                            return
+                print("Creating tweet...")
                 #Create tweet
-                #Todo: include sport, teams, and score in tweet
-                if cfb_game_result == 'L':
-                    if home_team == did_tech_die_cfb.team:
-                        new_tweet = str('Yes.\n' + '🏈 ' + away_team + ' ' + away_pts + ', ' + home_team + ' ' + home_pts)
-                        #Todo: check if new_tweet was already tweeted
-                        if any(new_tweet not in tweets for tweets in recent_tweets.data):
-                            print("Crafting tweet")
-                            response = client.create_tweet(text=new_tweet)
-                    else:
-                        response = client.create_tweet(text='Yes.\n' + '🏈 ' + home_team + ' ' + home_pts + ', ' + away_team + ' ' + away_pts)
-                if cfb_game_result == 'W':
-                    if home_team == did_tech_die_cfb.team:
-                        tweet = 'No.\n' + '🏈 ' + home_team + ' ' + home_pts + ', ' + away_team + ' ' + away_pts
-                        if recent_tweets.meta['result_count'] == 0:
-                            response = client.create_tweet(text=tweet)
-                    else:
-                        response = client.create_tweet(text='No.\n' + '🏈 ' + away_team + ' ' + away_pts + ', ' + home_team + ' ' + home_pts)
+                response = client.create_tweet(text=new_tweet)
+                print("New tweet: " + f"https://twitter.com/user/status/{response.data['id']}")
+                
                 
 
 create_cfb_tweet()

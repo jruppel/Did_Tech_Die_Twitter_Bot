@@ -13,7 +13,7 @@ configuration.api_key_prefix['Authorization'] = 'Bearer'
 api_instance = cfbd.GamesApi(cfbd.ApiClient(configuration))
 team = 'Louisiana Tech'
 #current_date = time.gmtime()
-current_date = time.strptime("2021-09-18", "%Y-%m-%d")
+current_date = time.strptime("2021-11-18", "%Y-%m-%d")
 year = current_date.tm_year
 
 def get_calendar_data():
@@ -49,43 +49,41 @@ def get_game_data(week, season_type):
         #print("Exception when calling CFBGamesApi->get_games: %s\n" % e)
 
 def is_today_gameday(game_data):
-    print("Checking if gameday is today")
+    print("Checking if gameday is today...")
     gameday = False
-    if game_data == None:
-        print("Tech is on a bye week")
+    game_start = time.strptime(game_data.start_date[:10], "%Y-%m-%d")
+    if game_start != current_date:
+        print("Tech gameday is not today!")
     else:
-        game_start = time.strptime(game_data.start_date[:10], "%Y-%m-%d")
-        if game_start != current_date:
-            print("Tech gameday is not today")
-        else:
-            print("Tech gameday is today!")
-            gameday = True
+        print("Tech gameday is today!\n")
+        gameday = True
     return gameday
 
-def game_is_final(game_data):
-    print("Checking if game is final")
+def is_game_final(game_data):
+    print("Checking if game is final..")
     game_is_final = False
+    #Score data is updated within minutes of a game being completed 
     if game_data.home_points and game_data.away_points:
-        print("Game is final")
+        print("Game is final!\n")
         game_is_final = True
     else:
-        print("Game is not final")
+        print("Game is not final!")
     return game_is_final
 
-def get_result(game_data):
-    if game_data.home_team == team:
-        if game_data.home_points > game_data.away_points:
-            result = 'W'
+def get_resulting_tweet(game_data):
+    home_team = game_data.home_team
+    away_team = game_data.away_team
+    home_pts = str(game_data.home_points)
+    away_pts = str(game_data.away_points)
+    #Result(tweet): Yes/No from Tech W/L + sport emote + winning team & pts + losing team & pts
+    if home_team == team:
+        if home_pts > away_pts:
+            result = 'No.\n' + '🏈 ' + home_team + ' ' + home_pts + ', ' + away_team + ' ' + away_pts
         else:
-            result = 'L'
+            result = 'Yes.\n' + '🏈 ' + away_team + ' ' + away_pts + ', ' + home_team + ' ' + home_pts
     else:
-        if game_data.home_points < game_data.away_points:
-            result = 'W'
+        if home_pts < away_pts:
+            result = 'No.\n' + '🏈 ' + away_team + ' ' + away_pts + ', ' + home_team + ' ' + home_pts
         else:
-            result = 'L'
+            result = 'Yes.\n' + '🏈 ' + home_team + ' ' + home_pts + ', ' + away_team + ' ' + away_pts
     return result
-
-#print(get_total_weeks_played())
-#print(get_total_games_played())
-#print(game_is_final())
-#print(get_game_data(1, 'regular'))
