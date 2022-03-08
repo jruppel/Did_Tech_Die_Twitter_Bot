@@ -13,7 +13,7 @@ configuration.api_key_prefix['Authorization'] = 'Bearer'
 api_instance = cfbd.GamesApi(cfbd.ApiClient(configuration))
 team = 'Louisiana Tech'
 #current_date = time.gmtime()
-current_date = time.strptime("2021-11-18", "%Y-%m-%d") #testing
+current_date = time.strptime("2021-09-04", "%Y-%m-%d") #testing
 year = current_date.tm_year
 
 def get_calendar_data():
@@ -79,12 +79,12 @@ def get_resulting_tweet(game_data):
     #Result(tweet): Yes/No from Tech W/L + sport emote + winning team & pts + losing team & pts
     if home_team == team:
         if home_pts > away_pts:
-            result = 'No.\n' + '🏈 ' + home_team + ' ' + home_pts + ', ' + away_team + ' ' + away_pts
+            result = "No.\n🏈: {} {}, {} {}".format(home_team, home_pts, away_team, away_pts)
         else:
-            result = 'Yes.\n' + '🏈 ' + away_team + ' ' + away_pts + ', ' + home_team + ' ' + home_pts
+            result = "Yes.\n🏈: {} {}, {} {}".format(away_team, away_pts, home_team, home_pts)
     else:
         if home_pts < away_pts:
-            result = 'No.\n' + '🏈 ' + away_team + ' ' + away_pts + ', ' + home_team + ' ' + home_pts
+            result = "No.\n🏈: {} {}, {} {}".format(away_team, away_pts, home_team, home_pts)
         else:
-            result = 'Yes.\n' + '🏈 ' + home_team + ' ' + home_pts + ', ' + away_team + ' ' + away_pts
+            result = "Yes.\n🏈: {} {}, {} {}".format(home_team, home_pts, away_team, away_pts)
     return result

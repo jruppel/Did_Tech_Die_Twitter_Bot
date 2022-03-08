@@ -1,8 +1,11 @@
+from cgitb import reset
 from logging import raiseExceptions
 import re
+from urllib import response
 import tweepy
 import constants
 import did_tech_die_cfb
+import did_tech_die_mbb
 
 # Authenticate to Twitter
 consumer_key=constants.twitter_consumer_key
@@ -41,9 +44,18 @@ def create_cfb_tweet():
                 #Create tweet
                 response = client.create_tweet(text=new_tweet)
                 print("New tweet: " + f"https://twitter.com/user/status/{response.data['id']}")
-                
-                
 
+def create_mbb_tweet():
+    mbb_game_today = did_tech_die_mbb.get_game_data()
+    if mbb_game_today is not None:
+        mbb_game_is_final = did_tech_die_mbb.is_game_final(mbb_game_today)
+        if mbb_game_is_final:
+            new_tweet = did_tech_die_mbb.get_resulting_tweet(mbb_game_today)
+            response = client.create_tweet(text=new_tweet)
+            print("New tweet: " + f"https://twitter.com/user/status/{response.data['id']}")
+        
+                
+create_mbb_tweet()
 create_cfb_tweet()
 #Todo: check if cfb game is final on game days after some time interval 
 #Todo: when game is final: tweet and stop checking if game is final until the next game week

@@ -1,12 +1,15 @@
+import re
 import time
 import pandas as pd
 
 now = time.localtime()
 year = now.tm_year
 last_year = year - 1
-current_date = time.strftime("%B%e, %Y (%A)",now)
+#current_date = time.strftime("%B%e, %Y (%A)",now)
+current_date = "March 2, 2022 (Wednesday)"
+team = "Louisiana Tech"
 
-def get_games_today():
+def get_game_data():
     url_year = str(last_year) + "-" + str(year)[2:]
     url = 'https://latechsports.com/sports/mens-basketball/schedule/{}?grid=true'.format(url_year)
     df = pd.read_html(url, header=0)[0]
@@ -16,5 +19,37 @@ def get_games_today():
         return
     return games_today
 
-   
-#get_games_today()
+def is_game_final(games_today):
+    final = False
+    game_info = games_today[['Result']]
+    if game_info.values.tolist()[0] != 'NaN':
+        final = True
+        print("Game is final!")
+    else:
+        print("Game is not final!")
+    return final
+
+def get_resulting_tweet(games_today):
+    game_info = games_today[['Opponent', 'At', 'Result']]
+    game = game_info.values.tolist()
+    home_away = game[0][1]
+    win_loss = game[0][2][0]
+    opponent = game[0][0]
+    score = game[0][2][4:]
+    if home_away == 'Home':
+        home_score = str(score.split("-")[0])
+        away_score = str(score.split("-")[1])
+        if win_loss == 'W':
+            result = "No.\nMen's 🏀: {} {}, {} {}".format(team, home_score, opponent, away_score) 
+        else:
+            result = "Yes.\nMen's 🏀: {} {}, {} {}".format(opponent, away_score, team, home_score) 
+    else:
+        home_score = str(score.split("-")[1])
+        away_score = str(score.split("-")[0])
+        if win_loss == 'W':
+            result = "No.\nMen's 🏀: {} {}, {} {}".format(team, away_score, opponent, home_score)
+        else:
+            result = "Yes.\nMen's 🏀: {} {}, {} {}".format(opponent, home_score, team, away_score) 
+    return result
+
+#print(get_game_result(get_game_data()))
