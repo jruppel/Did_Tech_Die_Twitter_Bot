@@ -5,8 +5,8 @@ import pandas as pd
 now = time.localtime()
 year = now.tm_year
 last_year = year - 1
-#current_date = time.strftime("%B%e, %Y (%A)",now)
-current_date = "March 2, 2022 (Wednesday)"
+current_date = time.strftime("%B%e, %Y (%A)",now)
+#current_date = "March 2, 2022 (Wednesday)" testing
 team = "Louisiana Tech"
 
 def get_game_data():
@@ -15,7 +15,7 @@ def get_game_data():
     df = pd.read_html(url, header=0)[0]
     games_today = df[df.Date.isin([current_date])]
     if games_today.empty:
-        print("Tech does not play today!")
+        print("Tech MBB does not play today!")
         return
     return games_today
 
@@ -24,9 +24,9 @@ def is_game_final(games_today):
     game_info = games_today[['Result']]
     if game_info.values.tolist()[0] != 'NaN':
         final = True
-        print("Game is final!")
+        print("Today's Tech MBB game is final!")
     else:
-        print("Game is not final!")
+        print("Today's Tech MBB game is not final!")
     return final
 
 def get_resulting_tweet(games_today):
@@ -51,5 +51,3 @@ def get_resulting_tweet(games_today):
         else:
             result = "Yes.\nMen's 🏀: {} {}, {} {}".format(opponent, home_score, team, away_score) 
     return result
-
-#print(get_game_result(get_game_data()))

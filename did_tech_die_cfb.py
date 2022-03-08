@@ -50,25 +50,25 @@ def get_game_data(week, season_type):
         #print("Exception when calling CFBGamesApi->get_games: %s\n" % e)
 
 def is_today_gameday(game_data):
-    print("Checking if gameday is today...")
+    print("Checking if CFB gameday is today...")
     gameday = False
     game_start = time.strptime(game_data.start_date[:10], "%Y-%m-%d")
     if game_start != current_date:
-        print("Tech gameday is not today!")
+        print("Tech CFB gameday is not today!")
     else:
-        print("Tech gameday is today!\n")
+        print("Tech CFB gameday is today!\n")
         gameday = True
     return gameday
 
 def is_game_final(game_data):
-    print("Checking if game is final..")
+    print("Checking if CFB game is final..")
     game_is_final = False
     #Score data is updated within minutes of a game being completed 
     if game_data.home_points and game_data.away_points:
-        print("Game is final!\n")
+        print("CFB game is final!\n")
         game_is_final = True
     else:
-        print("Game is not final!")
+        print("CFB game is not final!")
     return game_is_final
 
 def get_resulting_tweet(game_data):
