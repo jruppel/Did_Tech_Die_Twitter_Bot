@@ -1,12 +1,11 @@
-import re
 import time
 import pandas as pd
 
 now = time.localtime()
 year = now.tm_year
 last_year = year - 1
-#current_date = time.strftime("%B%e, %Y (%A)",now)
-current_date = "March 2, 2022 (Wednesday)" #testing
+current_date = time.strftime("%B%e, %Y (%A)",now)
+#current_date = "March 2, 2022 (Wednesday)" #testing
 team = "Louisiana Tech"
 
 def get_todays_game_data(sport):
@@ -28,11 +27,11 @@ def is_game_final(games_today):
     print("Checking if game is final...")
     game_info = games_today[['Result']]
     result = game_info.values.tolist()[0]
-    if result != 'NaN' and result != 'Postponed' and result != 'Canceled':
+    if result[0] not in {'NaN', 'Postponed', 'Canceled'}:
         final = True
         print("This Tech game is final!\n")
     else:
-        print("This Tech game is not final!\n")
+        print("This Tech game is not final!\nResult: {}".format(result[0]))
     return final
 #Todo: account for doubleheaders
 def get_resulting_tweet(sport, games_today):

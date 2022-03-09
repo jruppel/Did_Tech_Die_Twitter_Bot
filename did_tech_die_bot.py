@@ -20,6 +20,10 @@ seasons = [('winter', (date(Y,  1,  1),  date(Y,  3, 20))),
            ('summer', (date(Y,  6, 21),  date(Y,  9, 22))),
            ('autumn', (date(Y,  9, 23),  date(Y, 12, 20))),
            ('winter', (date(Y, 12, 21),  date(Y, 12, 31)))]
+winter_sports = {'football', 'mens-basketball', 'womens-basketball', 'baseball', 'softball', 'womens-tennis'}
+spring_sports = {'mens-basketball', 'womens-basketball', 'baseball', 'softball', 'womens-tennis'}
+summer_sports = {'football', 'womens-volleyball'}
+autumn_sports = {'football', 'mens-basketball', 'womens-basketball', 'womens-volleyball', 'womens-tennis'}
 
 #Get season to only tweet sports that are in-season
 def get_season():
@@ -42,6 +46,8 @@ def is_tweet_duplicate(new_tweet):
     return False
 
 def create_tweet(sport):
+    delay = random.randint(3, 15)
+    time.sleep(delay)
     print("----------------------------------------------------------------------------------------")
     print("Checking for {} games...".format(sport))
     game_today = did_tech_die.get_todays_game_data(sport)
@@ -58,21 +64,18 @@ def create_tweet(sport):
 #Mass tweeting based on season
 def create_tweets():
     season = get_season()
-    delay = random.randint(3, 15)
     if season == 'winter':
-        create_tweet('football')
-        time.sleep(delay)
-        create_tweet('mens-basketball')
-        time.sleep(delay)
-        create_tweet('womens-basketball')
+        for sport in winter_sports:
+            create_tweet(sport)
     if season == 'spring':
-        create_tweet('mens-basketball')
+        for sport in spring_sports:
+            create_tweet(sport)
     if season == "summer":
-        create_tweet('football')
+        for sport in summer_sports:
+            create_tweet(sport)
     if season == "autumn":
-        create_tweet('football')
-        time.sleep(delay)
-        create_tweet('mens-basketball')
+        for sport in autumn_sports:
+            create_tweet(sport)
 
 
-create_tweets()
+create_tweet('baseball')
