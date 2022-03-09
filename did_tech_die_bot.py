@@ -1,10 +1,9 @@
-from cgitb import reset
 from datetime import date, datetime
-from urllib import response
+import random
+import time
 import tweepy
 import constants
-import did_tech_die_cfb
-import did_tech_die_mbb
+import did_tech_die
 
 # Authenticate to Twitter
 consumer_key=constants.twitter_consumer_key
@@ -42,52 +41,38 @@ def is_tweet_duplicate(new_tweet):
     print("Tweet does not exist!\n")
     return False
 
-#Tech college football tweets
-def create_cfb_tweet():
-    cfb_game_week = did_tech_die_cfb.get_game_week()
-    #Checking if this week is a game week
-    if cfb_game_week is not None:
-        cfb_game_data = did_tech_die_cfb.get_game_data(cfb_game_week[0], cfb_game_week[1])
-        cfb_is_today_gameday = did_tech_die_cfb.is_today_gameday(cfb_game_data)
-        #Checking if game day is today
-        if cfb_is_today_gameday:
-            cfb_game_is_final = did_tech_die_cfb.is_game_final(cfb_game_data)
-            #Checking if final score is posted
-            if cfb_game_is_final:
-                # Get CFB Game and Tweet data
-                new_tweet = did_tech_die_cfb.get_resulting_tweet(cfb_game_data)
-                is_duplicate = is_tweet_duplicate(new_tweet)
-                #No recent tweets
-                if is_duplicate == False:
-                    print("Creating CFB tweet...")
-                    #Create tweet
-                    response = client.create_tweet(text=new_tweet)
-                    print("New CFB tweet: " + f"https://twitter.com/user/status/{response.data['id']}")
-
-#Tech men's basketball tweets
-def create_mbb_tweet():
-    mbb_game_today = did_tech_die_mbb.get_game_data()
-    if mbb_game_today is not None:
-        mbb_game_is_final = did_tech_die_mbb.is_game_final(mbb_game_today)
-        if mbb_game_is_final:
-            new_tweet = did_tech_die_mbb.get_resulting_tweet(mbb_game_today)
+def create_tweet(sport):
+    print("----------------------------------------------------------------------------------------")
+    print("Checking for {} games...".format(sport))
+    game_today = did_tech_die.get_todays_game_data(sport)
+    if game_today is not None:
+        game_is_final = did_tech_die.is_game_final(game_today)
+        if game_is_final:
+            new_tweet = did_tech_die.get_resulting_tweet(sport, game_today)
             is_duplicate = is_tweet_duplicate(new_tweet)
             if is_duplicate == False:
-                print("New MBB tweet: " + f"https://twitter.com/user/status/{response.data['id']}")
+                response = client.create_tweet(text=new_tweet)
+                url = f"https://twitter.com/user/status/{response.data['id']}"
+                print("New {} tweet:\n {}".format(sport, url))
 
 #Mass tweeting based on season
 def create_tweets():
     season = get_season()
+    delay = random.randint(3, 15)
     if season == 'winter':
-        create_cfb_tweet()
-        create_mbb_tweet()
+        create_tweet('football')
+        time.sleep(delay)
+        create_tweet('mens-basketball')
+        time.sleep(delay)
+        create_tweet('womens-basketball')
     if season == 'spring':
-        create_mbb_tweet()
+        create_tweet('mens-basketball')
     if season == "summer":
-        create_cfb_tweet()
+        create_tweet('football')
     if season == "autumn":
-        create_cfb_tweet()
-        create_mbb_tweet()
+        create_tweet('football')
+        time.sleep(delay)
+        create_tweet('mens-basketball')
 
 
 create_tweets()
