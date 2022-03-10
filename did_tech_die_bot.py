@@ -45,37 +45,41 @@ def is_tweet_duplicate(new_tweet):
     print("Tweet does not exist!\n")
     return False
 
-def create_tweet(sport):
+def create_sport_tweets(sport):
     delay = random.randint(3, 15)
     time.sleep(delay)
     print("----------------------------------------------------------------------------------------")
-    print("Checking for {} games...".format(sport))
-    game_today = did_tech_die.get_todays_game_data(sport)
-    if game_today is not None:
-        game_is_final = did_tech_die.is_game_final(game_today)
-        if game_is_final:
-            new_tweet = did_tech_die.get_resulting_tweet(sport, game_today)
-            is_duplicate = is_tweet_duplicate(new_tweet)
-            if is_duplicate == False:
-                response = client.create_tweet(text=new_tweet)
-                url = f"https://twitter.com/user/status/{response.data['id']}"
-                print("New {} tweet:\n {}".format(sport, url))
+    print("Checking for {} games today...".format(sport))
+    games_today = did_tech_die.get_todays_game_data(sport)
+    if games_today is not None:
+        game_info = games_today[['Opponent', 'At', 'Result']]
+        games = game_info.values.tolist()
+        for game in range(len(games)):
+            print("Checking if {} game {} is final...".format(sport, game+1))
+            game_is_final = did_tech_die.is_game_final(games[game])
+            if game_is_final:
+                new_tweet = did_tech_die.get_resulting_tweet(sport, games[game])
+                is_duplicate = is_tweet_duplicate(new_tweet)
+                if is_duplicate == False:
+                    response = client.create_tweet(text=new_tweet)
+                    url = f"https://twitter.com/user/status/{response.data['id']}"
+                    print("New {} tweet:\n{}".format(sport, url))
 
 #Mass tweeting based on season
-def create_tweets():
+def tweet_seasonal_sports():
     season = get_season()
     if season == 'winter':
         for sport in winter_sports:
-            create_tweet(sport)
+            create_sport_tweets(sport)
     if season == 'spring':
         for sport in spring_sports:
-            create_tweet(sport)
+            create_sport_tweets(sport)
     if season == "summer":
         for sport in summer_sports:
-            create_tweet(sport)
+            create_sport_tweets(sport)
     if season == "autumn":
         for sport in autumn_sports:
-            create_tweet(sport)
+            create_sport_tweets(sport)
 
 
-create_tweet('baseball')
+tweet_seasonal_sports()

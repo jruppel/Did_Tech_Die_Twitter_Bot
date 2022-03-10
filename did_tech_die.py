@@ -5,7 +5,7 @@ now = time.localtime()
 year = now.tm_year
 last_year = year - 1
 current_date = time.strftime("%B%e, %Y (%A)",now)
-#current_date = "March 2, 2022 (Wednesday)" #testing
+#current_date = "September 17, 2021 (Friday)" #testing
 team = "Louisiana Tech"
 
 def get_todays_game_data(sport):
@@ -15,26 +15,26 @@ def get_todays_game_data(sport):
         url_year = year
     url = 'https://latechsports.com/sports/{}/schedule/{}?grid=true'.format(sport,url_year)
     df = pd.read_html(url, header=0)[0]
-    games_today = df[df.Date.isin([current_date])]
+    games_today = df[df.Date.isin([current_date])].where(pd.notnull(df), None)
     if games_today.empty:
         print("Tech does not play today in this sport!\n")
         return
+    tech_games_today = games_today[~games_today.Opponent.str.contains("vs.")]
     print("Tech plays today for this sport!\n")
-    return games_today
+    return tech_games_today
 
-def is_game_final(games_today):
+def is_game_final(game):
     final = False
-    print("Checking if game is final...")
-    game_info = games_today[['Result']]
-    result = game_info.values.tolist()[0]
-    if result[0] not in {'NaN', 'Postponed', 'Canceled'}:
+    result = game[2]
+    if result not in {None, 'Canceled', 'Postponed'}:
         final = True
         print("This Tech game is final!\n")
     else:
-        print("This Tech game is not final!\nResult: {}".format(result[0]))
+        print("This Tech game is not final!\nResult: {}".format(result))
     return final
+
 #Todo: account for doubleheaders
-def get_resulting_tweet(sport, games_today):
+def get_resulting_tweet(sport, game):
     if sport == 'football':
         team_sport = "🏈"
     if sport == 'mens-basketball':
@@ -51,12 +51,14 @@ def get_resulting_tweet(sport, games_today):
         team_sport = "🏐"
     if sport == 'womens-tennis':
         team_sport = "🎾"
-    game_info = games_today[['Opponent', 'At', 'Result']]
-    game = game_info.values.tolist()
-    home_away = game[0][1]
-    win_loss = game[0][2][0]
-    opponent = game[0][0]
-    score = game[0][2][4:]
+    print(game)
+    home_away = game[1]
+    win_loss = game[2][0]
+    opponent = game[0]
+    score = game[2][4:]
+    if " " in score:
+        split_score = score.split(" ", 1)
+        score = split_score[0]
     if home_away in {'Home', 'Neutral'}:
         home_score = str(score.split("-")[0])
         away_score = str(score.split("-")[1])
