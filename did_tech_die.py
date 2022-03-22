@@ -1,27 +1,32 @@
+from datetime import date
+from datetime import timedelta
 import time
 import pandas as pd
 
-now = time.localtime()
-year = now.tm_year
+today = date.today()
+yesterday = today - timedelta(days=1)
+year = today.year
 last_year = year - 1
-current_date = time.strftime("%B%e, %Y (%A)",now)
+current_date = today.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
+yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
+
 #current_date = "September 17, 2021 (Friday)" #testing
 team = "Louisiana Tech"
 
-def get_todays_game_data(sport):
+def get_game_data(sport):
     if sport in {'mens-basketball', 'womens-basketball', 'womens-tennis'}:
         url_year = str(last_year) + "-" + str(year)[2:]
     if sport in {'baseball', 'womens-soccer', 'softball', 'womens-volleyball', 'football'}:
         url_year = year
     url = 'https://latechsports.com/sports/{}/schedule/{}?grid=true'.format(sport,url_year)
     df = pd.read_html(url, header=0)[0]
-    games_today = df[df.Date.isin([current_date])].where(pd.notnull(df), None)
-    if games_today.empty:
-        print("Tech does not play today in this sport!\n")
-        return
-    tech_games_today = games_today[~games_today.Opponent.str.contains("vs.")]
-    print("Tech plays today for this sport!\n")
-    return tech_games_today
+    recent_games = df[df.Date.isin([current_date, yesterday_date])].where(pd.notnull(df), None)
+    if recent_games.empty:
+        print("Tech does not play recently in this sport!\n")
+        return    
+    tech_games = recent_games[~recent_games.Opponent.str.contains("vs.")]
+    print("Tech played/plays recently in this sport!\n")
+    return tech_games
 
 def is_game_final(game):
     final = False
@@ -51,7 +56,6 @@ def get_resulting_tweet(sport, game):
         team_sport = "🏐"
     if sport == 'womens-tennis':
         team_sport = "🎾"
-    print(game)
     home_away = game[1]
     win_loss = game[2][0]
     opponent = game[0]

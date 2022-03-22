@@ -13,7 +13,9 @@ access_token_secret=constants.twitter_access_token_secret
 bearer_token=constants.twitter_bearer_token
 client = tweepy.Client(bearer_token=bearer_token, consumer_key=consumer_key,consumer_secret=consumer_secret,
 access_token=access_token,access_token_secret=access_token_secret)
-recent_tweets = client.get_users_tweets(id=constants.twitter_user_id, user_auth=True).data
+tweets = client.get_users_tweets(id=constants.twitter_user_id, user_auth=True).data
+recent_tweets = tweets
+
 Y = 2000 # dummy leap year to allow input X-02-29 (leap day)
 seasons = [('winter', (date(Y,  1,  1),  date(Y,  3, 20))),
            ('spring', (date(Y,  3, 21),  date(Y,  6, 20))),
@@ -35,7 +37,7 @@ def get_season():
                 if start <= now <= end)
 
 #Check for tweet duplication before tweeting
-def is_tweet_duplicate(new_tweet):
+def is_tweet_duplicate(recent_tweets, new_tweet):
     print("Checking if tweet already exists...")
     if recent_tweets != None:
         for tweet in range(len(recent_tweets)):
@@ -49,17 +51,17 @@ def create_sport_tweets(sport):
     delay = random.randint(3, 15)
     time.sleep(delay)
     print("----------------------------------------------------------------------------------------")
-    print("Checking for {} games today...".format(sport))
-    games_today = did_tech_die.get_todays_game_data(sport)
-    if games_today is not None:
-        game_info = games_today[['Opponent', 'At', 'Result']]
+    print("Checking for recent {} games...".format(sport))
+    games = did_tech_die.get_game_data(sport)
+    if games is not None:
+        game_info = games[['Opponent', 'At', 'Result']]
         games = game_info.values.tolist()
         for game in range(len(games)):
             print("Checking if {} game {} is final...".format(sport, game+1))
             game_is_final = did_tech_die.is_game_final(games[game])
             if game_is_final:
                 new_tweet = did_tech_die.get_resulting_tweet(sport, games[game])
-                is_duplicate = is_tweet_duplicate(new_tweet)
+                is_duplicate = is_tweet_duplicate(recent_tweets, new_tweet)
                 if is_duplicate == False:
                     response = client.create_tweet(text=new_tweet)
                     url = f"https://twitter.com/user/status/{response.data['id']}"
@@ -80,6 +82,5 @@ def tweet_seasonal_sports():
     if season == "autumn":
         for sport in autumn_sports:
             create_sport_tweets(sport)
-
-
+    
 tweet_seasonal_sports()
