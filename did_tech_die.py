@@ -1,6 +1,7 @@
 from datetime import date
 from datetime import timedelta
-import time
+from bs4 import BeautifulSoup
+import requests
 import pandas as pd
 
 today = date.today()
@@ -13,20 +14,29 @@ yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace
 #current_date = "September 17, 2021 (Friday)" #testing
 team = "Louisiana Tech"
 
-def get_game_data(sport):
+def get_sport_url(sport):
     if sport in {'mens-basketball', 'womens-basketball', 'womens-tennis'}:
         url_year = str(last_year) + "-" + str(year)[2:]
     if sport in {'baseball', 'womens-soccer', 'softball', 'womens-volleyball', 'football'}:
         url_year = year
     url = 'https://latechsports.com/sports/{}/schedule/{}?grid=true'.format(sport,url_year)
+    return url
+
+def get_game_data(url):
     df = pd.read_html(url, header=0)[0]
     recent_games = df[df.Date.isin([current_date, yesterday_date])].where(pd.notnull(df), None)
     if recent_games.empty:
-        print("Tech does not play recently in this sport!\n")
+        print("Tech did not play recently in this sport!\n")
         return    
     tech_games = recent_games[~recent_games.Opponent.str.contains("vs.")]
     print("Tech played/plays recently in this sport!\n")
     return tech_games
+
+def get_record(url):
+    page = requests.get(url+".html")
+    soup = BeautifulSoup(page.content, 'html.parser')
+    record = soup.findAll('span', class_="flex-item-1")[1].text
+    return record
 
 def is_game_final(game):
     final = False
@@ -39,7 +49,7 @@ def is_game_final(game):
     return final
 
 #Todo: account for doubleheaders
-def get_resulting_tweet(sport, game):
+def get_resulting_tweet(sport, game, record):
     if sport == 'football':
         team_sport = "🏈"
     if sport == 'mens-basketball':
@@ -67,14 +77,14 @@ def get_resulting_tweet(sport, game):
         home_score = str(score.split("-")[0])
         away_score = str(score.split("-")[1])
         if win_loss == 'W':
-            result = "No.\n{}: {} {}, {} {}".format(team_sport, team, home_score, opponent, away_score) 
+            result = "No.\n{}: {} defeats {} {} to {}.\nTech's overall record is now {}.".format(team_sport, team, opponent, home_score, away_score, record) 
         else:
-            result = "Yes.\n{}: {} {}, {} {}".format(team_sport, opponent, away_score, team, home_score) 
+            result = "Yes.\n{}: {} defeats {} {} to {}.\nTech's overall record is now {}.".format(team_sport, opponent, team, away_score, home_score, record) 
     else:
         home_score = str(score.split("-")[1])
         away_score = str(score.split("-")[0])
         if win_loss == 'W':
-            result = "No.\n{}: {} {}, {} {}".format(team_sport, team, away_score, opponent, home_score)
+            result = "No.\n{}: {} defeats {} {} to {}.\nTech's overall record is now {}.".format(team_sport, team, opponent, away_score, home_score, record)
         else:
-            result = "Yes.\n{}: {} {}, {} {}".format(team_sport, opponent, home_score, team, away_score) 
+            result = "Yes.\n{}: {} defeats {} {} to {}.\nTech's overall record is now {}.".format(team_sport, opponent, team, home_score, away_score, record) 
     return result
