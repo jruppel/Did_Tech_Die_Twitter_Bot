@@ -13,8 +13,8 @@ access_token_secret = constants.twitter_access_token_secret
 bearer_token = constants.twitter_bearer_token
 client = tweepy.Client(bearer_token=bearer_token, consumer_key=consumer_key,consumer_secret=consumer_secret,
 access_token = access_token,access_token_secret=access_token_secret)
-yesterday = str(did_tech_die.yesterday)+"T00:00:00-05:00"
-tweets = client.get_users_tweets(id=constants.twitter_user_id, start_time=yesterday, user_auth=True).data
+today = str(did_tech_die.today)+"T00:00:00-05:00"
+tweets = client.get_users_tweets(id=constants.twitter_user_id, start_time=today, user_auth=True).data
 recent_tweets = tweets
 
 Y = 2000 # dummy leap year to allow input X-02-29 (leap day)
@@ -58,12 +58,11 @@ def create_sport_tweets(sport):
     if games is not None:
         game_info = games[['Opponent', 'At', 'Result']]
         games = game_info.values.tolist()
-        record = did_tech_die.get_record(url)
         for game in range(len(games)):
             print("Checking if {} game {} is final...".format(sport, game+1))
             game_is_final = did_tech_die.is_game_final(games[game])
             if game_is_final:
-                new_tweet = did_tech_die.get_resulting_tweet(sport, games[game], record)
+                new_tweet = did_tech_die.get_resulting_tweet(sport, games[game])
                 is_duplicate = is_tweet_duplicate(recent_tweets, new_tweet)
                 if is_duplicate == False:
                     response = client.create_tweet(text=new_tweet)
