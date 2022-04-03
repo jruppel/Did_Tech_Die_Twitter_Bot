@@ -14,7 +14,6 @@ bearer_token = constants.twitter_bearer_token
 client = tweepy.Client(bearer_token=bearer_token, consumer_key=consumer_key,consumer_secret=consumer_secret,
 access_token = access_token,access_token_secret=access_token_secret)
 today = str(did_tech_die.today)+"T00:00:00-10:00"
-print(today)
 tweets = client.get_users_tweets(id=constants.twitter_user_id, start_time=today, user_auth=True).data
 recent_tweets = tweets
 
