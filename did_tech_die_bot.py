@@ -13,8 +13,8 @@ access_token_secret = constants.twitter_access_token_secret
 bearer_token = constants.twitter_bearer_token
 client = tweepy.Client(bearer_token=bearer_token, consumer_key=consumer_key,consumer_secret=consumer_secret,
 access_token = access_token,access_token_secret=access_token_secret)
-today = str(did_tech_die.today)+"T00:00:00-10:00"
-tweets = client.get_users_tweets(id=constants.twitter_user_id, start_time=today, user_auth=True).data
+yesterday = str(did_tech_die.yesterday)+"T00:00:00-05:00"
+tweets = client.get_users_tweets(id=constants.twitter_user_id, start_time=yesterday, user_auth=True).data
 recent_tweets = tweets
 
 Y = 2000 # dummy leap year to allow input X-02-29 (leap day)

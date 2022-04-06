@@ -1,17 +1,13 @@
-from datetime import datetime
+from datetime import date
 from datetime import timedelta
 import pandas as pd
-import pytz
 
-#Tentatively using Hawaii time (UTC-10) for games that go into a new day in Central time (UTC-6/5)
-tz = pytz.timezone('US/Hawaii')
-today = datetime.now(tz).date()
-print(today)
-#yesterday = today - timedelta(days=1)
+today = date.today()
+yesterday = today - timedelta(days = 1)
 year = today.year
 last_year = year - 1
 current_date = today.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
-#yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
+yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 
 #current_date = "September 17, 2021 (Friday)" #testing
 team = "Louisiana Tech"
@@ -26,7 +22,7 @@ def get_sport_url(sport):
 
 def get_game_data(url):
     df = pd.read_html(url, header=0)[0]
-    recent_games = df[df.Date.isin([current_date])].where(pd.notnull(df), None)
+    recent_games = df[df.Date.isin([current_date, yesterday_date])].where(pd.notnull(df), None)
     if recent_games.empty:
         print("Tech did not play recently in this sport!\n")
         return    
