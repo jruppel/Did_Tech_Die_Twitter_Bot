@@ -11,11 +11,7 @@ consumer_secret = constants.twitter_consumer_secret
 access_token = constants.twitter_access_token
 access_token_secret = constants.twitter_access_token_secret
 bearer_token = constants.twitter_bearer_token
-client = tweepy.Client(bearer_token=bearer_token, consumer_key=consumer_key,consumer_secret=consumer_secret,
-access_token = access_token,access_token_secret=access_token_secret)
-yesterday = str(did_tech_die.yesterday)+"T00:00:00-05:00"
-tweets = client.get_users_tweets(id=constants.twitter_user_id, start_time=yesterday, user_auth=True).data
-recent_tweets = tweets
+client = tweepy.Client(bearer_token=bearer_token, consumer_key=consumer_key,consumer_secret=consumer_secret,access_token=access_token,access_token_secret=access_token_secret)
 
 Y = 2000 # dummy leap year to allow input X-02-29 (leap day)
 seasons = [('winter', (date(Y,  1,  1),  date(Y,  3, 20))),
@@ -54,20 +50,19 @@ def create_sport_tweets(sport):
     print("----------------------------------------------------------------------------------------")
     print("Checking for recent {} games...".format(sport))
     url = did_tech_die.get_sport_url(sport)
-    games = did_tech_die.get_game_data(url)
+    games = did_tech_die.get_game_data(url, sport)
     if games is not None:
-        game_info = games[['Opponent', 'At', 'Result']]
-        games = game_info.values.tolist()
         for game in range(len(games)):
             print("Checking if {} game {} is final...".format(sport, game+1))
             game_is_final = did_tech_die.is_game_final(games[game])
             if game_is_final:
-                new_tweet = did_tech_die.get_resulting_tweet(sport, games[game])
-                is_duplicate = is_tweet_duplicate(recent_tweets, new_tweet)
-                if is_duplicate == False:
+                is_duplicate = did_tech_die.is_game_in_db(games[game])
+                if not is_duplicate:
+                    new_tweet = did_tech_die.get_resulting_tweet(sport, games[game])
                     response = client.create_tweet(text=new_tweet)
                     url = f"https://twitter.com/user/status/{response.data['id']}"
                     print("New {} tweet:\n{}\n".format(sport, url))
+                    did_tech_die.update_game_db(games[game])
 
 #Mass tweeting based on season
 def tweet_seasonal_sports():
@@ -84,5 +79,5 @@ def tweet_seasonal_sports():
     if season == "autumn":
         for sport in autumn_sports:
             create_sport_tweets(sport)
-    
+  
 tweet_seasonal_sports()
