@@ -62,7 +62,7 @@ def create_sport_tweets(sport):
                     response = client.create_tweet(text=new_tweet)
                     url = f"https://twitter.com/user/status/{response.data['id']}"
                     print("New {} tweet:\n{}\n".format(sport, url))
-                    did_tech_die.update_game_db(games[game])
+                    did_tech_die.update_game_data(games[game])
 
 #Mass tweeting based on season
 def tweet_seasonal_sports():
