@@ -13,6 +13,7 @@ access_token_secret = constants.twitter_access_token_secret
 bearer_token = constants.twitter_bearer_token
 client = tweepy.Client(bearer_token=bearer_token, consumer_key=consumer_key,consumer_secret=consumer_secret,access_token=access_token,access_token_secret=access_token_secret)
 
+#Todo: Refactor mass tweetingq
 Y = 2000 # dummy leap year to allow input X-02-29 (leap day)
 seasons = [('winter', (date(Y,  1,  1),  date(Y,  3, 20))),
            ('spring', (date(Y,  3, 21),  date(Y,  6, 20))),
@@ -53,6 +54,7 @@ def create_sport_tweets(sport):
     games = did_tech_die.get_game_data(url, sport)
     if games is not None:
         for game in range(len(games)):
+            #Todo: assign each value of game for did_tech_die functions to reduce redundant code
             print("Checking if {} game {} is final...".format(sport, game+1))
             game_is_final = did_tech_die.is_game_final(games[game])
             if game_is_final:

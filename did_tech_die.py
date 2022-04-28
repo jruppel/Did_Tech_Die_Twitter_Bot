@@ -18,6 +18,16 @@ team = "Louisiana Tech"
 engine = db.create_engine('sqlite:///gamedata.db')
 connection = engine.connect()
 metadata = db.MetaData()
+if not db.inspect(engine).has_table('games'):
+    db.Table('games', metadata,
+          db.Column('Sport', db.String), 
+          db.Column('Date', db.String), 
+          db.Column('Time', db.String),
+          db.Column('Opponent', db.String), 
+          db.Column('At', db.String),
+          db.Column('Result', db.String)
+    )
+    metadata.create_all()
 games = db.Table('games', metadata, autoload=True, autoload_with=engine)
 
 def get_sport_url(sport):
