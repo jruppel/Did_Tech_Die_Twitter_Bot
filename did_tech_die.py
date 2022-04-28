@@ -17,7 +17,7 @@ team = "Louisiana Tech"
 
 engine = db.create_engine('sqlite:///gamedata.db')
 connection = engine.connect()
-metadata = db.MetaData()
+metadata = db.MetaData(engine)
 if not db.inspect(engine).has_table('games'):
     db.Table('games', metadata,
           db.Column('Sport', db.String), 
@@ -28,7 +28,8 @@ if not db.inspect(engine).has_table('games'):
           db.Column('Result', db.String)
     )
     metadata.create_all()
-games = db.Table('games', metadata, autoload=True, autoload_with=engine)
+else:
+    games = db.Table('games', metadata, autoload=True, autoload_with=engine)
 
 def get_sport_url(sport):
     if sport in {'mens-basketball', 'womens-basketball', 'womens-tennis'}:
