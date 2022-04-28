@@ -15,6 +15,7 @@ yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace
 #yesterday_date = "April 24, 2022 (Sunday)" #testing
 team = "Louisiana Tech"
 
+#Todo: refactor 
 engine = db.create_engine('sqlite:///gamedata.db')
 connection = engine.connect()
 metadata = db.MetaData(engine)
@@ -28,8 +29,7 @@ if not db.inspect(engine).has_table('games'):
           db.Column('Result', db.String)
     )
     metadata.create_all()
-else:
-    games = db.Table('games', metadata, autoload=True, autoload_with=engine)
+games = db.Table('games', metadata, autoload=True, autoload_with=engine)
 
 def get_sport_url(sport):
     if sport in {'mens-basketball', 'womens-basketball', 'womens-tennis'}:
