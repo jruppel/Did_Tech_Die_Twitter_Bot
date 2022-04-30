@@ -58,13 +58,15 @@ def create_sport_tweets(sport):
             print("Checking if {} game {} is final...".format(sport, game+1))
             game_is_final = did_tech_die.is_game_final(games[game])
             if game_is_final:
+                print("Checking if tweet is duplicated...")
                 is_duplicate = did_tech_die.is_game_in_db(games[game])
                 if not is_duplicate:
+                    print("Updating game data in game db...")
+                    did_tech_die.update_game_data(games[game])
                     new_tweet = did_tech_die.get_resulting_tweet(sport, games[game])
                     response = client.create_tweet(text=new_tweet)
                     url = f"https://twitter.com/user/status/{response.data['id']}"
-                    print("New {} tweet:\n{}\n".format(sport, url))
-                    did_tech_die.update_game_data(games[game])
+                    print("New {} tweet: {}\n".format(sport, url))
 
 #Mass tweeting based on season
 def tweet_seasonal_sports():

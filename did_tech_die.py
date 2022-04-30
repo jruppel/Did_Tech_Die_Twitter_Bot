@@ -43,14 +43,14 @@ def get_game_data(url, sport):
     df = pd.read_html(url, header=0)[0]
     recent_games = df[df.Date.isin([current_date, yesterday_date])].where(pd.notnull(df), None)
     if recent_games.empty:
-        print("Tech did not play recently in this sport!\n")
+        print("Tech did not play recently in this sport!")
         return    
     tech_games = recent_games[~recent_games.Opponent.str.contains("vs.")]
     game_info = tech_games[['Date', 'Time', 'Opponent', 'At', 'Result']]
     sport_info = sport.capitalize()
     game_info.insert(0, 'Sport', sport_info)
     games = game_info.values.tolist()
-    print("Tech played/plays recently in this sport!\n")
+    print("Tech played recently in this sport!")
     return games
 
 def is_game_final(game):
@@ -72,8 +72,9 @@ def is_game_in_db(game):
     gd_result = game[5]
     query = db.select([games]).where(db.and_(games.columns.Sport == gd_sport, games.columns.Date == gd_date, games.columns.Time == gd_time, games.columns.Opponent == gd_opponent, games.columns.At == gd_at, games.columns.Result == gd_result))
     result = engine.execute(query).fetchall()
-    print(result)
     if not result:
+        print("Tweet is not a duplicate!")
+        print("Result: " + str(result))
         return False
     print("Tech played recently in this sport, but it was already tweeted!\n")
     return True
@@ -122,10 +123,12 @@ def update_game_data(game_data):
     #Insert new game data
     insert_query = db.insert(games).values(Sport=game_data[0], Date=game_data[1], Time=game_data[2], Opponent=game_data[3], At=game_data[4], Result=game_data[5])
     engine.execute(insert_query)
+    print("Game data inserted!")
     #Delete old game data
     all_games = db.select([games])
     result = engine.execute(all_games).fetchall()
     for game in result:
-        if game[1] != yesterday_date or game[1] != current_date:
+        if game[1] != yesterday_date and game[1] != current_date:
             delete_query = db.delete(games).where(db.and_(games.columns.Sport == game[0], games.columns.Date == game[1], games.columns.Time == game[2], games.columns.Opponent == game[3], games.columns.At == game[4], games.columns.Result == game[5]))
             engine.execute(delete_query)
+            print("Old game data deleted!")
