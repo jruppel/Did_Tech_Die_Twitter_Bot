@@ -1,6 +1,6 @@
 from datetime import date, datetime
 import random
-import time
+import time as tm
 import tweepy
 import constants
 import did_tech_die
@@ -47,23 +47,24 @@ def is_tweet_duplicate(recent_tweets, new_tweet):
 
 def create_sport_tweets(sport):
     delay = random.randint(3, 15)
-    time.sleep(delay)
+    tm.sleep(delay)
     print("----------------------------------------------------------------------------------------")
     print("Checking for recent {} games...".format(sport))
     url = did_tech_die.get_sport_url(sport)
     games = did_tech_die.get_game_data(url, sport)
     if games is not None:
         for game in range(len(games)):
+            sport, date, time, opponent, home_away, result = games[game][0], games[game][1], games[game][2], games[game][3], games[game][4], games[game][5]
             #Todo: assign each value of game for did_tech_die functions to reduce redundant code
             print("Checking if {} game {} is final...".format(sport, game+1))
-            game_is_final = did_tech_die.is_game_final(games[game])
+            game_is_final = did_tech_die.is_game_final(result)
             if game_is_final:
                 print("Checking if tweet is duplicated...")
-                is_duplicate = did_tech_die.is_game_in_db(games[game])
+                is_duplicate = did_tech_die.is_game_in_db(sport, date, time, opponent, home_away, result)
                 if not is_duplicate:
                     print("Updating game data in game db...")
-                    did_tech_die.update_game_data(games[game])
-                    new_tweet = did_tech_die.get_resulting_tweet(sport, games[game])
+                    did_tech_die.update_game_data(sport, date, time, opponent, home_away, result)
+                    new_tweet = did_tech_die.get_resulting_tweet(sport, opponent, home_away, result)
                     response = client.create_tweet(text=new_tweet)
                     url = f"https://twitter.com/user/status/{response.data['id']}"
                     print("New {} tweet: {}\n".format(sport, url))

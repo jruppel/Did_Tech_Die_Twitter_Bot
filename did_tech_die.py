@@ -53,9 +53,8 @@ def get_game_data(url, sport):
     print("Tech played recently in this sport!")
     return games
 
-def is_game_final(game):
+def is_game_final(result):
     final = False
-    result = game[5]
     if result not in {None, 'Canceled', 'Postponed'}:
         final = True
         print("This Tech game is final!")
@@ -63,14 +62,8 @@ def is_game_final(game):
         print("This Tech game is not final!\nResult: {}".format(result))
     return final
 
-def is_game_in_db(game):
-    gd_sport = game[0]
-    gd_date = game[1]
-    gd_time = game[2]
-    gd_opponent = game[3]
-    gd_at = game[4]
-    gd_result = game[5]
-    query = db.select([games]).where(db.and_(games.columns.Sport == gd_sport, games.columns.Date == gd_date, games.columns.Time == gd_time, games.columns.Opponent == gd_opponent, games.columns.At == gd_at, games.columns.Result == gd_result))
+def is_game_in_db(gd_sport, gd_date, gd_time, gd_opponent, gd_home_away, gd_result):
+    query = db.select([games]).where(db.and_(games.columns.Sport == gd_sport, games.columns.Date == gd_date, games.columns.Time == gd_time, games.columns.Opponent == gd_opponent, games.columns.At == gd_home_away, games.columns.Result == gd_result))
     result = engine.execute(query).fetchall()
     if not result:
         print("Tweet is not a duplicate!")
@@ -79,27 +72,25 @@ def is_game_in_db(game):
     print("Tech played recently in this sport, but it was already tweeted!\n")
     return True
 
-def get_resulting_tweet(sport, game):
-    if sport == 'football':
+def get_resulting_tweet(sport, opponent, home_away, result):
+    if sport == 'Football':
         team_sport = "🏈"
-    if sport == 'mens-basketball':
+    if sport == 'Mens-basketball':
         team_sport = "Men's 🏀"
-    if sport == 'womens-basketball':
+    if sport == 'Womens-basketball':
         team_sport = "Women's 🏀"
-    if sport == "baseball":
+    if sport == "Baseball":
         team_sport = "⚾"
-    if sport == "softball":
+    if sport == "Softball":
         team_sport = "🥎"
-    if sport == "womens-soccer":
+    if sport == "Womens-soccer":
         team_sport = "⚽"
-    if sport == 'womens-volleyball':
+    if sport == 'Womens-volleyball':
         team_sport = "🏐"
-    if sport == 'womens-tennis':
+    if sport == 'Womens-tennis':
         team_sport = "🎾"
-    home_away = game[4]
-    win_loss = game[5][0]
-    opponent = game[3]
-    score = game[5][4:]
+    win_loss = result[0]
+    score = result[4:]
     if " " in score:
         split_score = score.split(" ", 1)
         score = split_score[0]
@@ -119,16 +110,17 @@ def get_resulting_tweet(sport, game):
             result = "Yes.\n{}: {} defeats {} {} to {}.\n".format(team_sport, opponent, team, home_score, away_score) 
     return result
 
-def update_game_data(game_data):
+def update_game_data(sport, date, time, opponent, home_away, result):
     #Insert new game data
-    insert_query = db.insert(games).values(Sport=game_data[0], Date=game_data[1], Time=game_data[2], Opponent=game_data[3], At=game_data[4], Result=game_data[5])
+    insert_query = db.insert(games).values(Sport=sport, Date=date, Time=time, Opponent=opponent, At=home_away, Result=result)
     engine.execute(insert_query)
     print("Game data inserted!")
     #Delete old game data
     all_games = db.select([games])
     result = engine.execute(all_games).fetchall()
     for game in result:
-        if game[1] != yesterday_date and game[1] != current_date:
-            delete_query = db.delete(games).where(db.and_(games.columns.Sport == game[0], games.columns.Date == game[1], games.columns.Time == game[2], games.columns.Opponent == game[3], games.columns.At == game[4], games.columns.Result == game[5]))
+        sport, date, time, opponent, home_away, result = game[0], game[1], game[2], game[3], game[4], game[5]
+        if date != yesterday_date and date != current_date:
+            delete_query = db.delete(games).where(db.and_(games.columns.Sport == sport, games.columns.Date == date, games.columns.Time == time, games.columns.Opponent == opponent, games.columns.At == home_away, games.columns.Result == result))
             engine.execute(delete_query)
             print("Old game data deleted!")
