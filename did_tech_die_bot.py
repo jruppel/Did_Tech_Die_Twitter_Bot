@@ -13,17 +13,17 @@ access_token_secret = constants.twitter_access_token_secret
 bearer_token = constants.twitter_bearer_token
 client = tweepy.Client(bearer_token=bearer_token, consumer_key=consumer_key,consumer_secret=consumer_secret,access_token=access_token,access_token_secret=access_token_secret)
 
-#Todo: Refactor mass tweetingq
+#Todo: Refactor mass tweeting
 Y = 2000 # dummy leap year to allow input X-02-29 (leap day)
 seasons = [('winter', (date(Y,  1,  1),  date(Y,  3, 20))),
            ('spring', (date(Y,  3, 21),  date(Y,  6, 20))),
            ('summer', (date(Y,  6, 21),  date(Y,  9, 22))),
            ('autumn', (date(Y,  9, 23),  date(Y, 12, 20))),
            ('winter', (date(Y, 12, 21),  date(Y, 12, 31)))]
-winter_sports = {'football', 'mens-basketball', 'womens-basketball', 'baseball', 'softball', 'womens-tennis'}
-spring_sports = {'mens-basketball', 'womens-basketball', 'baseball', 'softball', 'womens-tennis'}
-summer_sports = {'football', 'womens-volleyball'}
-autumn_sports = {'football', 'mens-basketball', 'womens-basketball', 'womens-volleyball', 'womens-tennis'}
+winter_sports = {'football', 'mens-basketball', 'womens-basketball', 'baseball', 'softball', 'womens-tennis', 'womens-bowling', 'mens-golf', 'womens-track-and-field', 'mens-track-and-field'}
+spring_sports = {'mens-basketball', 'womens-basketball', 'baseball', 'softball', 'womens-tennis', 'womens-bowling', 'mens-golf', 'womens-track-and-field', 'mens-track-and-field'}
+summer_sports = {'football', 'womens-volleyball', 'womens-cross-country', 'mens-cross-country', 'mens-golf'}
+autumn_sports = {'football', 'mens-basketball', 'womens-basketball', 'womens-volleyball', 'womens-tennis', 'womens-bowling', 'mens-golf'}
 
 #Get season to only tweet sports that are in-season
 def get_season():
@@ -34,23 +34,12 @@ def get_season():
     return next(season for season, (start, end) in seasons
                 if start <= now <= end)
 
-#Check for tweet duplication before tweeting
-def is_tweet_duplicate(recent_tweets, new_tweet):
-    print("Checking if tweet already exists...")
-    if recent_tweets != None:
-        for tweet in range(len(recent_tweets)):
-            if recent_tweets[tweet]["text"] == new_tweet:
-                print("Duplicate tweet exists! No tweets to create!\n")
-                return True
-    print("Tweet does not exist!\n")
-    return False
-
 def create_sport_tweets(sport):
     delay = random.randint(3, 15)
     tm.sleep(delay)
     print("----------------------------------------------------------------------------------------")
     print("Checking for recent {} games...".format(sport))
-    url = did_tech_die.get_sport_url(sport)
+    url = did_tech_die.get_tech_url(sport)
     games = did_tech_die.get_game_data(url, sport)
     if games is not None:
         for game in range(len(games)):
@@ -64,7 +53,7 @@ def create_sport_tweets(sport):
                 if not is_duplicate:
                     print("Updating game data in game db...")
                     did_tech_die.update_game_data(sport, date, time, opponent, home_away, result)
-                    new_tweet = did_tech_die.get_resulting_tweet(sport, opponent, home_away, result)
+                    new_tweet = did_tech_die.set_tweet(sport, opponent, home_away, result)
                     response = client.create_tweet(text=new_tweet)
                     url = f"https://twitter.com/user/status/{response.data['id']}"
                     print("New {} tweet: {}\n".format(sport, url))
@@ -84,5 +73,5 @@ def tweet_seasonal_sports():
     if season == "autumn":
         for sport in autumn_sports:
             create_sport_tweets(sport)
-  
+
 tweet_seasonal_sports()
