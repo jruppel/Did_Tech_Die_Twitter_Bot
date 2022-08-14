@@ -74,5 +74,4 @@ def tweet_seasonal_sports():
         for sport in autumn_sports:
             create_sport_tweets(sport)
 
-create_sport_tweets('mens-cross-country')
-#tweet_seasonal_sports()
+tweet_seasonal_sports()
