@@ -34,7 +34,7 @@ games = db.Table('games', metadata, autoload=True, autoload_with=engine)
 def get_tech_url(sport):
     if sport in {'mens-basketball', 'womens-basketball', 'womens-tennis', 'womens-bowling', 'mens-golf'}:
         url_year = str(last_year) + "-" + str(year)[2:]
-    if sport in {'baseball', 'womens-soccer', 'softball', 'womens-volleyball', 'football', 'womens-cross-county', 'mens-cross-country', 'womens-track-and-field', 'mens-track-and-field'}:
+    if sport in {'baseball', 'womens-soccer', 'softball', 'womens-volleyball', 'football', 'womens-cross-country', 'mens-cross-country', 'womens-track-and-field', 'mens-track-and-field'}:
         url_year = year
         if sport in {'womens-cross-country', 'mens-cross-country', 'womens-track-and-field', 'mens-track-and-field'}:
             sport = sport.split("-", 1)[1]
@@ -49,18 +49,23 @@ def get_tech_url(sport):
 '''
 
 def get_game_data(url, sport):
-    df = pd.read_html(url, header=0)[0]
-    recent_games = df[df.Date.isin([current_date, yesterday_date])].where(pd.notnull(df), None)
-    if recent_games.empty:
-        print("Tech did not play recently in this sport!")
-        return    
-    tech_games = recent_games[~recent_games.Opponent.str.contains("vs.")]
-    game_info = tech_games[['Date', 'Time', 'Opponent', 'At', 'Result']]
-    sport_info = sport.capitalize()
-    game_info.insert(0, 'Sport', sport_info)
-    games = game_info.values.tolist()
-    print("Tech played recently in this sport!")
-    return games
+    try:
+        df = pd.read_html(url, header=0)[0]
+        recent_games = df[df.Date.isin([current_date, yesterday_date])].where(pd.notnull(df), None)
+    except AttributeError:
+        print("Current year schedule for this sport has not been created yet!")
+        return
+    else:
+        if recent_games.empty:
+            print("Tech did not play recently in this sport!")
+            return   
+        tech_games = recent_games[~recent_games.Opponent.str.contains("vs.")]
+        game_info = tech_games[['Date', 'Time', 'Opponent', 'At', 'Result']]
+        sport_info = sport.capitalize()
+        game_info.insert(0, 'Sport', sport_info)
+        games = game_info.values.tolist()
+        print("Tech played recently in this sport!")
+        return games
 
 def is_game_final(result):
     final = False

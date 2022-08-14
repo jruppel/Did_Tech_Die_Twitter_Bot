@@ -22,8 +22,8 @@ seasons = [('winter', (date(Y,  1,  1),  date(Y,  3, 20))),
            ('winter', (date(Y, 12, 21),  date(Y, 12, 31)))]
 winter_sports = {'football', 'mens-basketball', 'womens-basketball', 'baseball', 'softball', 'womens-tennis', 'womens-bowling', 'mens-golf', 'womens-track-and-field', 'mens-track-and-field'}
 spring_sports = {'mens-basketball', 'womens-basketball', 'baseball', 'softball', 'womens-tennis', 'womens-bowling', 'mens-golf', 'womens-track-and-field', 'mens-track-and-field'}
-summer_sports = {'football', 'womens-volleyball', 'womens-cross-country', 'mens-cross-country', 'mens-golf'}
-autumn_sports = {'football', 'mens-basketball', 'womens-basketball', 'womens-volleyball', 'womens-tennis', 'womens-bowling', 'mens-golf'}
+summer_sports = {'football', 'womens-volleyball', 'womens-cross-country', 'womens-soccer', 'mens-cross-country', 'mens-golf'}
+autumn_sports = {'football', 'mens-basketball', 'womens-basketball', 'womens-volleyball', 'womens-tennis', 'womens-bowling', 'womens-soccer', 'mens-golf'}
 
 #Get season to only tweet sports that are in-season
 def get_season():
@@ -74,4 +74,5 @@ def tweet_seasonal_sports():
         for sport in autumn_sports:
             create_sport_tweets(sport)
 
-tweet_seasonal_sports()
+create_sport_tweets('mens-cross-country')
+#tweet_seasonal_sports()
