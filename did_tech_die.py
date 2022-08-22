@@ -69,7 +69,7 @@ def get_game_data(url, sport):
 
 def is_game_final(result):
     final = False
-    if result not in {None, 'Canceled', 'Postponed'}:
+    if not result != result and result not in {None, 'Canceled', 'Postponed'}:
         final = True
         print("This Tech game is final!")
     else:
