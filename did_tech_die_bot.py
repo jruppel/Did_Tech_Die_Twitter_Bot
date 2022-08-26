@@ -27,7 +27,8 @@ else:
 #Authenticate to Twitter
 client = tweepy.Client(bearer_token=bearer_token, consumer_key=consumer_key,consumer_secret=consumer_secret,access_token=access_token,access_token_secret=access_token_secret)
 
-#Set texting constants
+#Set texting 
+smtp_provider=constants.smtp_provider
 recipient=constants.recipient
 email=constants.email
 password=constants.password
@@ -96,7 +97,7 @@ def tweet_seasonal_sports():
             create_sport_tweets(sport)
 
 def send_text(message):
-    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server = smtplib.SMTP(smtp_provider, 587)
     server.starttls()
     server.login(email, password)
     server.sendmail(email, recipient, message)
