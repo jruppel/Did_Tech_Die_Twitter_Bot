@@ -4,14 +4,33 @@ import time as tm
 import tweepy
 import constants
 import did_tech_die
+import smtplib
 
-# Authenticate to Twitter
-consumer_key = constants.twitter_consumer_key
-consumer_secret = constants.twitter_consumer_secret
-access_token = constants.twitter_access_token
-access_token_secret = constants.twitter_access_token_secret
-bearer_token = constants.twitter_bearer_token
+testing = False
+
+# Set testing account constants
+if testing:
+    consumer_key = constants.test_twitter_consumer_key
+    consumer_secret = constants.test_twitter_consumer_secret
+    access_token = constants.test_twitter_access_token
+    access_token_secret = constants.test_twitter_access_token_secret
+    bearer_token = constants.test_twitter_bearer_token
+
+# Set main account constants
+else:
+    consumer_key = constants.twitter_consumer_key
+    consumer_secret = constants.twitter_consumer_secret
+    access_token = constants.twitter_access_token
+    access_token_secret = constants.twitter_access_token_secret
+    bearer_token = constants.twitter_bearer_token
+
+#Authenticate to Twitter
 client = tweepy.Client(bearer_token=bearer_token, consumer_key=consumer_key,consumer_secret=consumer_secret,access_token=access_token,access_token_secret=access_token_secret)
+
+#Set texting constants
+recipient=constants.recipient
+email=constants.email
+password=constants.password
 
 #Todo: Refactor mass tweeting
 Y = 2000 # dummy leap year to allow input X-02-29 (leap day)
@@ -56,7 +75,9 @@ def create_sport_tweets(sport):
                     new_tweet = did_tech_die.set_tweet(sport, opponent, home_away, result)
                     response = client.create_tweet(text=new_tweet)
                     url = f"https://twitter.com/user/status/{response.data['id']}"
-                    print("New {} tweet: {}\n".format(sport, url))
+                    message = "\nNew {} tweet: {}\n".format(sport, url)
+                    send_text(message)
+                    print(message)
 
 #Mass tweeting based on season
 def tweet_seasonal_sports():
@@ -73,5 +94,11 @@ def tweet_seasonal_sports():
     if season == "autumn":
         for sport in autumn_sports:
             create_sport_tweets(sport)
+
+def send_text(message):
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.starttls()
+    server.login(email, password)
+    server.sendmail(email, recipient, message)
 
 tweet_seasonal_sports()
