@@ -110,6 +110,8 @@ def set_tweet(sport, opponent, home_away, result):
             away_score = str(score.split("-")[1])
             if win_loss == 'W':
                 tweet = "No.\n{}: {} defeats {} {} to {}.".format(team_sport, team, opponent, home_score, away_score) 
+            if win_loss == 'T':
+                tweet = "No.\n{}: {} ties {} {} to {}.".format(team_sport, team, opponent, home_score, away_score)
             else:
                 tweet = "Yes.\n{}: {} defeats {} {} to {}.".format(team_sport, opponent, team, away_score, home_score) 
         else:
@@ -117,6 +119,8 @@ def set_tweet(sport, opponent, home_away, result):
             away_score = str(score.split("-")[0])
             if win_loss == 'W':
                 tweet = "No.\n{}: {} defeats {} {} to {}.".format(team_sport, team, opponent, away_score, home_score)
+            if win_loss == 'T':
+                tweet = "No.\n{}: {} ties {} {} to {}.".format(team_sport, team, opponent, away_score, home_score)
             else:
                 tweet = "Yes.\n{}: {} defeats {} {} to {}.\n".format(team_sport, opponent, team, home_score, away_score) 
     return tweet
