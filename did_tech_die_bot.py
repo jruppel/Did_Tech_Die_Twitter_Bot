@@ -6,7 +6,7 @@ import constants
 import did_tech_die
 import smtplib
 
-testing = False
+testing = True
 
 # Set testing account constants
 if testing:
@@ -65,20 +65,23 @@ def create_sport_tweets(sport):
         for game in range(len(games)):
             sport, date, time, opponent, home_away, result = games[game][0], games[game][1], games[game][2], games[game][3], games[game][4], games[game][5]
             #Todo: assign each value of game for did_tech_die functions to reduce redundant code
-            print("Checking if {} game {} is final...".format(sport, game+1))
-            game_is_final = did_tech_die.is_game_final(result)
-            if game_is_final:
-                print("Checking if tweet is duplicated...")
-                is_duplicate = did_tech_die.is_game_in_db(sport, date, time, opponent, home_away, result)
-                if not is_duplicate:
-                    print("Updating game data in game db...")
-                    did_tech_die.update_game_data(sport, date, time, opponent, home_away, result)
-                    new_tweet = did_tech_die.set_tweet(sport, opponent, home_away, result)
-                    response = client.create_tweet(text=new_tweet)
-                    url = f"https://twitter.com/user/status/{response.data['id']}"
-                    message = "\nNew {} tweet: {}\n".format(sport, url)
-                    send_text(message)
-                    print(message)
+            print("Checking if {} game {} is an exhibition...".format(sport, game+1))
+            game_is_exhibibiton = did_tech_die.is_game_exhibition(opponent)
+            if not game_is_exhibibiton:
+                print("Checking if {} game {} is final...".format(sport, game+1))
+                game_is_final = did_tech_die.is_game_final(result)
+                if game_is_final:
+                    print("Checking if tweet is duplicated...")
+                    is_duplicate = did_tech_die.is_game_in_db(sport, date, time, opponent, home_away, result)
+                    if not is_duplicate:
+                        print("Updating game data in game db...")
+                        did_tech_die.update_game_data(sport, date, time, opponent, home_away, result)
+                        new_tweet = did_tech_die.set_tweet(sport, opponent, home_away, result)
+                        response = client.create_tweet(text=new_tweet)
+                        url = f"https://twitter.com/user/status/{response.data['id']}"
+                        message = "\nNew {} tweet: {}\n".format(sport, url)
+                        send_text(message)
+                        print(message)
 
 #Mass tweeting based on season
 def tweet_seasonal_sports():

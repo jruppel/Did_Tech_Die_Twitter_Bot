@@ -14,8 +14,8 @@ last_year = year - 1
 current_date = today.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 
-#current_date = "October 31, 2020 (Saturday)" #testing
-#yesterday_date = "October 30, 2020 (Friday)" #testing
+#current_date = "August 19, 2022 (Friday)" #testing
+#yesterday_date = "August 18, 2022 (Thursday)" #testing
 #year = 2020 #testing
 #last_year = 2019 #testing
 
@@ -74,6 +74,15 @@ def get_game_data(url, sport):
         games = game_info.values.tolist()
         print("Tech played recently in this sport!")
         return games
+
+def is_game_exhibition(opponent):
+    exhibition = False
+    if "(exhibition)" in opponent:
+        exhibition = True
+        print("This Tech game is an exhibition; no tweet needed!")
+    else:
+        print("This Tech game is not an exhibition!")
+    return exhibition
 
 def is_game_final(result):
     final = False
