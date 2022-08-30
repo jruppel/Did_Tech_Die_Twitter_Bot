@@ -1,5 +1,7 @@
+from ast import Delete
 from datetime import date
 from datetime import timedelta
+from traceback import print_tb
 import pandas as pd
 import sqlite3
 import sqlalchemy as db
@@ -12,8 +14,11 @@ last_year = year - 1
 current_date = today.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 
-#current_date = "May 12, 2022 (Thursday)" #testing
-#yesterday_date = "May 11, 2022 (Wednesday)" #testing
+#current_date = "October 31, 2020 (Saturday)" #testing
+#yesterday_date = "October 30, 2020 (Friday)" #testing
+#year = 2020 #testing
+#last_year = 2019 #testing
+
 team = "Louisiana Tech"
 
 sql_db=constants.sql_db
@@ -115,7 +120,7 @@ def set_tweet(sport, opponent, home_away, result):
                 tweet = "No.\n{}: {} defeats {} {} to {}.".format(team_sport, team, opponent, home_score, away_score) 
             if win_loss == 'T':
                 tweet = "No.\n{}: {} ties {} {} to {}.".format(team_sport, team, opponent, home_score, away_score)
-            else:
+            if win_loss == 'L':
                 tweet = "Yes.\n{}: {} defeats {} {} to {}.".format(team_sport, opponent, team, away_score, home_score) 
         else:
             home_score = str(score.split("-")[1])
@@ -124,7 +129,7 @@ def set_tweet(sport, opponent, home_away, result):
                 tweet = "No.\n{}: {} defeats {} {} to {}.".format(team_sport, team, opponent, away_score, home_score)
             if win_loss == 'T':
                 tweet = "No.\n{}: {} ties {} {} to {}.".format(team_sport, team, opponent, away_score, home_score)
-            else:
+            if win_loss == 'L':
                 tweet = "Yes.\n{}: {} defeats {} {} to {}.\n".format(team_sport, opponent, team, home_score, away_score) 
     return tweet
 
