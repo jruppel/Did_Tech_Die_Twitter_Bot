@@ -6,7 +6,7 @@ import constants
 import did_tech_die
 import smtplib
 
-testing = True
+testing = False
 
 # Set testing account constants
 if testing:
