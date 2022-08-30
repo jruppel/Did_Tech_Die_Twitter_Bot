@@ -3,6 +3,7 @@ from datetime import timedelta
 import pandas as pd
 import sqlite3
 import sqlalchemy as db
+import constants
 
 today = date.today()
 yesterday = today - timedelta(days = 1)
@@ -15,8 +16,10 @@ yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace
 #yesterday_date = "May 11, 2022 (Wednesday)" #testing
 team = "Louisiana Tech"
 
+sql_db=constants.sql_db
+
 #Todo: refactor 
-engine = db.create_engine('sqlite:///gamedata.db')
+engine = db.create_engine(sql_db)
 connection = engine.connect()
 metadata = db.MetaData(engine)
 if not db.inspect(engine).has_table('games'):
@@ -83,7 +86,7 @@ def is_game_in_db(gd_sport, gd_date, gd_time, gd_opponent, gd_home_away, gd_resu
         print("Tweet is not a duplicate!")
         print("Result: " + str(result))
         return False
-    print("Tech played recently in this sport, but it was already tweeted!\n")
+    print("Tech played recently in this sport, but it was already tweeted!")
     return True
 
 def set_tweet(sport, opponent, home_away, result):
