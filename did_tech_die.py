@@ -14,8 +14,8 @@ last_year = year - 1
 current_date = today.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 
-#current_date = "August 19, 2022 (Friday)" #testing
-#yesterday_date = "August 18, 2022 (Thursday)" #testing
+current_date = "September 1, 2022 (Thursday)" #testing
+yesterday_date = "Auguest 31, 2022 (Wednesday)" #testing
 #year = 2020 #testing
 #last_year = 2019 #testing
 
@@ -123,23 +123,27 @@ def set_tweet(sport, opponent, home_away, result):
             split_score = score.split(" ", 1)
             score = split_score[0]
         if home_away in {'Home', 'Neutral'}:
-            home_score = str(score.split("-")[0])
-            away_score = str(score.split("-")[1])
+            tech_score = int(score.split("-")[0])
+            away_score = int(score.split("-")[1])
+            if (win_loss == 'W' and away_score >= tech_score) or (win_loss == 'L' and away_score <= tech_score):
+                away_score,tech_score=tech_score,away_score
             if win_loss == 'W':
-                tweet = "No.\n{}: {} defeats {} {} to {}.".format(team_sport, team, opponent, home_score, away_score) 
+                tweet = "No.\n{}: {} defeats {} {} to {}.".format(team_sport, team, opponent, tech_score, away_score) 
             if win_loss == 'T':
-                tweet = "No.\n{}: {} ties {} {} to {}.".format(team_sport, team, opponent, home_score, away_score)
+                tweet = "No.\n{}: {} ties {} {} to {}.".format(team_sport, team, opponent, tech_score, away_score)
             if win_loss == 'L':
-                tweet = "Yes.\n{}: {} defeats {} {} to {}.".format(team_sport, opponent, team, away_score, home_score) 
-        else:
+                tweet = "Yes.\n{}: {} defeats {} {} to {}.".format(team_sport, opponent, team, away_score, tech_score) 
+        if home_away in {'Away'}:
             home_score = str(score.split("-")[1])
-            away_score = str(score.split("-")[0])
+            tech_score = str(score.split("-")[0])
+            if (win_loss == 'W' and home_score >= tech_score) or (win_loss == 'L' and home_score <= tech_score):
+                home_score,tech_score=tech_score,home_score
             if win_loss == 'W':
-                tweet = "No.\n{}: {} defeats {} {} to {}.".format(team_sport, team, opponent, away_score, home_score)
+                tweet = "No.\n{}: {} defeats {} {} to {}.".format(team_sport, team, opponent, tech_score, home_score)
             if win_loss == 'T':
-                tweet = "No.\n{}: {} ties {} {} to {}.".format(team_sport, team, opponent, away_score, home_score)
+                tweet = "No.\n{}: {} ties {} {} to {}.".format(team_sport, team, opponent, tech_score, home_score)
             if win_loss == 'L':
-                tweet = "Yes.\n{}: {} defeats {} {} to {}.\n".format(team_sport, opponent, team, home_score, away_score) 
+                tweet = "Yes.\n{}: {} defeats {} {} to {}.".format(team_sport, opponent, team, home_score, tech_score) 
     return tweet
 
 def get_team_sport(sport):

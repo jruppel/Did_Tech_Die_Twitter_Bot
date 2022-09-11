@@ -6,7 +6,7 @@ import constants
 import did_tech_die
 import smtplib
 
-testing = True
+testing = False
 
 # Set testing account constants
 if testing:
@@ -25,7 +25,7 @@ else:
     bearer_token = constants.twitter_bearer_token
 
 #Authenticate to Twitter
-client = tweepy.Client(bearer_token=bearer_token, consumer_key=consumer_key,consumer_secret=consumer_secret,access_token=access_token,access_token_secret=access_token_secret)
+client = tweepy.Client(bearer_token=bearer_token,consumer_key=consumer_key,consumer_secret=consumer_secret,access_token=access_token,access_token_secret=access_token_secret)
 
 #Set texting 
 smtp_provider=constants.smtp_provider
