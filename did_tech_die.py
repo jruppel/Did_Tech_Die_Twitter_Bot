@@ -10,6 +10,7 @@ import constants
 today = date.today()
 yesterday = today - timedelta(days = 1)
 year = today.year
+last_year = year - 1
 next_year = year + 1
 current_date = today.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
@@ -41,7 +42,10 @@ games = db.Table('games', metadata, autoload=True, autoload_with=engine)
 
 def get_tech_url(sport):
     if sport in {'mens-basketball', 'womens-basketball', 'womens-tennis', 'womens-bowling', 'mens-golf'}:
-        url_year = str(year) + "-" + str(next_year)[2:]
+        if date(year,1,1) < current_date < date(year,6,20):
+            url_year = str(last_year) + "-" + str(year)[2:]
+        if date(year,6,21) < current_date < date(year,12,31):    
+            url_year = str(year) + "-" + str(next_year)[2:]
     if sport in {'baseball', 'womens-soccer', 'softball', 'womens-volleyball', 'football', 'womens-cross-country', 'mens-cross-country', 'womens-track-and-field', 'mens-track-and-field'}:
         url_year = year
         if sport in {'womens-cross-country', 'mens-cross-country', 'womens-track-and-field', 'mens-track-and-field'}:
