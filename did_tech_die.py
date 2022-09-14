@@ -14,8 +14,8 @@ last_year = year - 1
 current_date = today.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 
-current_date = "September 1, 2022 (Thursday)" #testing
-yesterday_date = "Auguest 31, 2022 (Wednesday)" #testing
+#current_date = "September 1, 2022 (Thursday)" #testing
+#yesterday_date = "Auguest 31, 2022 (Wednesday)" #testing
 #year = 2020 #testing
 #last_year = 2019 #testing
 
