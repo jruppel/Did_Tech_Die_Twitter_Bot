@@ -42,9 +42,9 @@ games = db.Table('games', metadata, autoload=True, autoload_with=engine)
 
 def get_tech_url(sport):
     if sport in {'mens-basketball', 'womens-basketball', 'womens-tennis', 'womens-bowling', 'mens-golf'}:
-        if date(year,1,1) < today <= date(year,6,20):
+        if date(year,1,1) <= today <= date(year,6,20):
             url_year = str(last_year) + "-" + str(year)[2:]
-        if date(year,6,21) <= today < date(year,12,31):    
+        if date(year,6,21) <= today <= date(year,12,31):    
             url_year = str(year) + "-" + str(next_year)[2:]
     if sport in {'baseball', 'womens-soccer', 'softball', 'womens-volleyball', 'football', 'womens-cross-country', 'mens-cross-country', 'womens-track-and-field', 'mens-track-and-field'}:
         url_year = year
