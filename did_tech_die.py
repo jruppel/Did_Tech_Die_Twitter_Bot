@@ -1,11 +1,11 @@
 from ast import Delete
 from datetime import date
 from datetime import timedelta
-from traceback import print_tb
 import pandas as pd
 import sqlite3
 import sqlalchemy as db
 import constants
+import logging
 
 today = date.today()
 yesterday = today - timedelta(days = 1)
@@ -65,46 +65,46 @@ def get_game_data(url, sport):
         df = pd.read_html(url, header=0)[0]
         recent_games = df[df.Date.isin([current_date, yesterday_date])].where(pd.notnull(df), None)
     except AttributeError:
-        print("Current year schedule for this sport has not been created yet!")
+        logging.info("Current year schedule for this sport has not been created yet!")
         return
     else:
         if recent_games.empty:
-            print("Tech did not play recently in this sport!")
+            logging.info("Tech did not play recently in this sport!")
             return   
         tech_games = recent_games[~recent_games.Opponent.str.contains("vs.")]
         game_info = tech_games[['Date', 'Time', 'Opponent', 'At', 'Result']]
         sport_info = sport.capitalize()
         game_info.insert(0, 'Sport', sport_info)
         games = game_info.values.tolist()
-        print("Tech played recently in this sport!")
+        logging.info("Tech played recently in this sport!")
         return games
 
 def is_game_exhibition(opponent):
     exhibition = False
     if "(exhibition)" in opponent:
         exhibition = True
-        print("This Tech game is an exhibition; no tweet needed!")
+        logging.info("This Tech game is an exhibition; no tweet needed!")
     else:
-        print("This Tech game is not an exhibition!")
+        logging.info("This Tech game is not an exhibition!")
     return exhibition
 
 def is_game_final(result):
     final = False
     if not result != result and result not in {None, 'Canceled', 'Postponed'}:
         final = True
-        print("This Tech game is final!")
+        logging.info("This Tech game is final!")
     else:
-        print("This Tech game is not final!\nResult: {}".format(result))
+        logging.info("This Tech game is not final!\nResult: {}".format(result))
     return final
 
 def is_game_in_db(gd_sport, gd_date, gd_time, gd_opponent, gd_home_away, gd_result):
     query = db.select([games]).where(db.and_(games.columns.Sport == gd_sport, games.columns.Date == gd_date, games.columns.Time == gd_time, games.columns.Opponent == gd_opponent, games.columns.At == gd_home_away, games.columns.Result == gd_result))
     result = engine.execute(query).fetchall()
     if not result:
-        print("Tweet is not a duplicate!")
-        print("Result: " + str(result))
+        logging.info("Tweet is not a duplicate!")
+        logging.info("Result: " + str(result))
         return False
-    print("Tech played recently in this sport, but it was already tweeted!")
+    logging.info("Tech played recently in this sport, but it was already tweeted!")
     return True
 
 def set_tweet(sport, opponent, home_away, result):
@@ -185,7 +185,7 @@ def update_game_data(sport, date, time, opponent, home_away, result):
     #Insert new game data
     insert_query = db.insert(games).values(Sport=sport, Date=date, Time=time, Opponent=opponent, At=home_away, Result=result)
     engine.execute(insert_query)
-    print("New game data inserted!")
+    logging.info("New game data inserted!")
     #Delete old game data
     all_games = db.select([games])
     result = engine.execute(all_games).fetchall()
@@ -194,4 +194,4 @@ def update_game_data(sport, date, time, opponent, home_away, result):
         if date != yesterday_date and date != current_date:
             delete_query = db.delete(games).where(db.and_(games.columns.Sport == sport, games.columns.Date == date, games.columns.Time == time, games.columns.Opponent == opponent, games.columns.At == home_away, games.columns.Result == result))
             engine.execute(delete_query)
-            print("Old game data deleted!")
+            logging.info("Old game data deleted!")

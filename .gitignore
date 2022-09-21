@@ -2,3 +2,4 @@ constants.py
 __pycache__/
 venv/
 gamedata.db
+bot.log
