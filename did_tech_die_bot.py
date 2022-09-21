@@ -12,8 +12,8 @@ testing = constants.testing
 logging.basicConfig(
      filename=constants.log,
      level=logging.DEBUG, 
-     format= '[%(asctime)s] {%(module)s:%(lineno)d} %(levelname)s - %(message)s',
-     datefmt='%H:%M:%S'
+     format= '[%(asctime)s] {%(module)s:%(funcName)s:%(lineno)d} %(levelname)s - %(message)s',
+     datefmt='%m-%d-%Y %H:%M:%S'
  )
 
 # Set testing account constants
@@ -112,4 +112,9 @@ def send_text(message):
     server.login(email, password)
     server.sendmail(email, recipient, message)
 
-tweet_seasonal_sports()
+def main():
+    logging.info("Starting Did Tech Die Twitter bot")
+    tweet_seasonal_sports()
+    logging.info("Ending Did Tech Die Twitter bot")
+
+main()
