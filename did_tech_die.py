@@ -73,8 +73,7 @@ def get_game_data(url, sport):
             return   
         tech_games = recent_games[~recent_games.Opponent.str.contains("vs.")]
         game_info = tech_games[['Date', 'Time', 'Opponent', 'At', 'Result']]
-        sport_info = sport.capitalize()
-        game_info.insert(0, 'Sport', sport_info)
+        game_info.insert(0, 'Sport', sport.capitalize())
         games = game_info.values.tolist()
         logging.info("Tech played recently in this sport!")
         return games
@@ -96,6 +95,19 @@ def is_game_final(result):
     else:
         logging.info("This Tech game is not final!\nResult: {}".format(result))
     return final
+
+'''def result_to_score(sport, result):
+    if sport in {'Baseball', 'Womens-soccer', 'Softball', 'Womens-volleyball', 'Football', 'Mens-basketball', 'Womens-basketball', 'Womens-tennis'}:
+        win_loss = result[0]
+        score = result[4:]
+        if " " in score:
+            split_score = score.split(" ", 1)
+            score = split_score[0]
+        tech_score = int(score.split("-")[0])
+        away_score = int(score.split("-")[1])
+        if (win_loss == 'W' and away_score >= tech_score) or (win_loss == 'L' and away_score <= tech_score):
+                away_score,tech_score=tech_score,away_score'''
+        
 
 def is_game_in_db(gd_sport, gd_date, gd_time, gd_opponent, gd_home_away, gd_result):
     query = db.select([games]).where(db.and_(games.columns.Sport == gd_sport, games.columns.Date == gd_date, games.columns.Time == gd_time, games.columns.Opponent == gd_opponent, games.columns.At == gd_home_away, games.columns.Result == gd_result))

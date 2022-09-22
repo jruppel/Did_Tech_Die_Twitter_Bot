@@ -84,9 +84,9 @@ def create_sport_tweets(sport):
                         new_tweet = did_tech_die.set_tweet(sport, opponent, home_away, result)
                         response = client.create_tweet(text=new_tweet)
                         url = f"https://twitter.com/user/status/{response.data['id']}"
-                        message = "New {} tweet: {}\n".format(sport, url)
-                        send_text(message)
+                        message = "New {} tweet: {}".format(sport, url)
                         logging.info(message)
+                        send_text("\n"+message+"\n")
                         logging.info("Updating game data in game db...")
                         did_tech_die.update_game_data(sport, date, time, opponent, home_away, result)
 
@@ -115,6 +115,6 @@ def send_text(message):
 def main():
     logging.info("Starting Did Tech Die Twitter bot")
     tweet_seasonal_sports()
-    logging.info("Ending Did Tech Die Twitter bot")
+    logging.info("Ending Did Tech Die Twitter bot\n")
 
 main()
