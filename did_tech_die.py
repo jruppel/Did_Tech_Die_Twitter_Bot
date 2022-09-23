@@ -15,8 +15,8 @@ next_year = year + 1
 current_date = today.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 
-current_date = "September 17, 2022 (Saturday)" #testing
-yesterday_date = "September 16, 2022 (Friday)" #testing
+#current_date = "September 17, 2022 (Saturday)" #testing
+#yesterday_date = "September 16, 2022 (Friday)" #testing
 #year = 2020 #testing
 #last_year = 2019 #testing
 
