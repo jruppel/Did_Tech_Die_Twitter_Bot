@@ -81,7 +81,7 @@ def create_sport_tweets(sport):
                     logging.info("Checking if tweet is duplicated...")
                     is_duplicate = did_tech_die.is_game_in_db(sport, date, time, opponent, home_away, result)
                     if not is_duplicate:
-                        new_tweet = did_tech_die.set_tweet(sport, opponent, home_away, result)
+                        new_tweet = did_tech_die.set_tweet(sport, opponent, result)
                         response = client.create_tweet(text=new_tweet)
                         url = f"https://twitter.com/user/status/{response.data['id']}"
                         message = "New {} tweet: {}".format(sport, url)

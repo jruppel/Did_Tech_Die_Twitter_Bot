@@ -15,8 +15,8 @@ next_year = year + 1
 current_date = today.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 
-#current_date = "September 1, 2022 (Thursday)" #testing
-#yesterday_date = "Auguest 31, 2022 (Wednesday)" #testing
+current_date = "September 17, 2022 (Saturday)" #testing
+yesterday_date = "September 16, 2022 (Friday)" #testing
 #year = 2020 #testing
 #last_year = 2019 #testing
 
@@ -65,7 +65,7 @@ def get_game_data(url, sport):
         df = pd.read_html(url, header=0)[0]
         recent_games = df[df.Date.isin([current_date, yesterday_date])].where(pd.notnull(df), None)
     except AttributeError:
-        logging.info("Current year schedule for this sport has not been created yet!")
+        logging.warning("Current year schedule for this sport has not been created yet!")
         return
     else:
         if recent_games.empty:
@@ -96,7 +96,7 @@ def is_game_final(result):
         logging.info("This Tech game is not final!\nResult: {}".format(result))
     return final
 
-'''def result_to_score(sport, result):
+def result_to_score(sport, result):
     if sport in {'Baseball', 'Womens-soccer', 'Softball', 'Womens-volleyball', 'Football', 'Mens-basketball', 'Womens-basketball', 'Womens-tennis'}:
         win_loss = result[0]
         score = result[4:]
@@ -104,10 +104,18 @@ def is_game_final(result):
             split_score = score.split(" ", 1)
             score = split_score[0]
         tech_score = int(score.split("-")[0])
-        away_score = int(score.split("-")[1])
-        if (win_loss == 'W' and away_score >= tech_score) or (win_loss == 'L' and away_score <= tech_score):
-                away_score,tech_score=tech_score,away_score'''
-        
+        opponent_score = int(score.split("-")[1])
+        if (win_loss == 'W' and opponent_score >= tech_score) or (win_loss == 'L' and opponent_score <= tech_score):
+                opponent_score,tech_score=tech_score,opponent_score
+    if sport in {'Womens-bowling', 'Mens-golf', 'Mens-track-and-field', 'Womens-track-and-field', 'Mens-cross-country', 'Womens-cross-country'}:
+        win_loss = opponent_score = None
+        if sport in {'Mens-track-and-field', 'Womens-track-and-field', 'Mens-cross-country', 'Womens-cross-country'}:
+            results = result.split(';')
+            if sport in {'Mens-track-and-field', 'Mens-cross-country'}:
+                tech_score = results[0].split(" ")[1]
+            if sport in {'Womens-track-and-field', 'Womens-cross-country'}:
+                tech_score = results[1].split(" ")[2]
+    return win_loss, tech_score, opponent_score
 
 def is_game_in_db(gd_sport, gd_date, gd_time, gd_opponent, gd_home_away, gd_result):
     query = db.select([games]).where(db.and_(games.columns.Sport == gd_sport, games.columns.Date == gd_date, games.columns.Time == gd_time, games.columns.Opponent == gd_opponent, games.columns.At == gd_home_away, games.columns.Result == gd_result))
@@ -119,47 +127,21 @@ def is_game_in_db(gd_sport, gd_date, gd_time, gd_opponent, gd_home_away, gd_resu
     logging.info("Tech played recently in this sport, but it was already tweeted!")
     return True
 
-def set_tweet(sport, opponent, home_away, result):
+def set_tweet(sport, opponent, result):
     team_sport = get_team_sport(sport)
-    if sport in {'Womens-bowling', 'Mens-golf', 'Mens-track-and-field', 'Womens-track-and-field', 'Mens-cross-country', 'Womens-cross-country'}:
-        if sport in {'Mens-track-and-field', 'Mens-cross-country', 'Womens-track-and-field', 'Womens-cross-country'}:
-            results = result.split(';')
-            if sport in {'Mens-track-and-field', 'Mens-cross-country'}:
-                result = results[0][3:]
-            if sport in {'Womens-track-and-field', 'Womens-cross-country'}:
-                result = results[1][3:]
-        if result == '1st':
-            tweet = "No.\n{}: {} finished {} at the {}.\n".format(team_sport, team, result, opponent)
+    win_loss, tech_score, opponent_score = result_to_score(sport, result)
+    if win_loss == opponent_score == None:
+        if tech_score == '1st':
+            tweet = "No.\n{}: {} finished {} at the {}.\n".format(team_sport, team, tech_score, opponent)
         else:
-            tweet = "Yes.\n{}: {} finished {} at the {}.\n".format(team_sport, team, result, opponent)
-    if sport in {'Baseball', 'Womens-soccer', 'Softball', 'Womens-volleyball', 'Football', 'Mens-basketball', 'Womens-basketball', 'Womens-tennis'}:
-        win_loss = result[0]
-        score = result[4:]
-        if " " in score:
-            split_score = score.split(" ", 1)
-            score = split_score[0]
-        if home_away in {'Home', 'Neutral'}:
-            tech_score = int(score.split("-")[0])
-            away_score = int(score.split("-")[1])
-            if (win_loss == 'W' and away_score >= tech_score) or (win_loss == 'L' and away_score <= tech_score):
-                away_score,tech_score=tech_score,away_score
-            if win_loss == 'W':
-                tweet = "No.\n{}: {} defeats {} {} to {}.".format(team_sport, team, opponent, tech_score, away_score) 
-            if win_loss == 'T':
-                tweet = "No.\n{}: {} ties {} {} to {}.".format(team_sport, team, opponent, tech_score, away_score)
-            if win_loss == 'L':
-                tweet = "Yes.\n{}: {} defeats {} {} to {}.".format(team_sport, opponent, team, away_score, tech_score) 
-        if home_away in {'Away'}:
-            home_score = str(score.split("-")[1])
-            tech_score = str(score.split("-")[0])
-            if (win_loss == 'W' and home_score >= tech_score) or (win_loss == 'L' and home_score <= tech_score):
-                home_score,tech_score=tech_score,home_score
-            if win_loss == 'W':
-                tweet = "No.\n{}: {} defeats {} {} to {}.".format(team_sport, team, opponent, tech_score, home_score)
-            if win_loss == 'T':
-                tweet = "No.\n{}: {} ties {} {} to {}.".format(team_sport, team, opponent, tech_score, home_score)
-            if win_loss == 'L':
-                tweet = "Yes.\n{}: {} defeats {} {} to {}.".format(team_sport, opponent, team, home_score, tech_score) 
+            tweet = "Yes.\n{}: {} finished {} at the {}.\n".format(team_sport, team, tech_score, opponent)
+    else:
+        if win_loss == 'W':
+            tweet = "No.\n{}: {} defeats {} {} to {}.".format(team_sport, team, opponent, tech_score, opponent_score) 
+        if win_loss == 'T':
+            tweet = "No.\n{}: {} ties {} {} to {}.".format(team_sport, team, opponent, tech_score, opponent_score)
+        if win_loss == 'L':
+            tweet = "Yes.\n{}: {} defeats {} {} to {}.".format(team_sport, opponent, team, opponent_score, tech_score) 
     return tweet
 
 def get_team_sport(sport):
