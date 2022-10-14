@@ -15,8 +15,8 @@ next_year = year + 1
 current_date = today.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 
-#current_date = "September 17, 2022 (Saturday)" #testing
-#yesterday_date = "September 16, 2022 (Friday)" #testing
+#current_date = "October 8, 2022 (Saturday)" #testing
+#yesterday_date = "October 7, 2022 (Friday)" #testing
 #year = 2020 #testing
 #last_year = 2019 #testing
 
@@ -109,6 +109,8 @@ def result_to_score(sport, result):
                 opponent_score,tech_score=tech_score,opponent_score
     if sport in {'Womens-bowling', 'Mens-golf', 'Mens-track-and-field', 'Womens-track-and-field', 'Mens-cross-country', 'Womens-cross-country'}:
         win_loss = opponent_score = None
+        if sport in {'Womens-bowling', 'Mens-golf'}:
+            tech_score = result
         if sport in {'Mens-track-and-field', 'Womens-track-and-field', 'Mens-cross-country', 'Womens-cross-country'}:
             results = result.split(';')
             if sport in {'Mens-track-and-field', 'Mens-cross-country'}:
