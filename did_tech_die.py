@@ -1,6 +1,7 @@
 from ast import Delete
 from datetime import date
 from datetime import timedelta
+from distutils.log import debug
 import pandas as pd
 import sqlite3
 import sqlalchemy as db
@@ -76,6 +77,7 @@ def get_game_data(url, sport):
         game_info.insert(0, 'Sport', sport.capitalize())
         games = game_info.values.tolist()
         logging.info("Tech played recently in this sport!")
+        logging.debug(games)
         return games
 
 def is_game_exhibition(opponent):
@@ -119,7 +121,13 @@ def result_to_score(sport, result):
                 tech_score = results[1].split(" ")[2]
     return win_loss, tech_score, opponent_score
 
+def nan_time_to_time(time):
+    if time != time:
+        time = "None"
+    return time
+
 def is_game_in_db(gd_sport, gd_date, gd_time, gd_opponent, gd_home_away, gd_result):
+    logging.debug("Time for this match is {}".format(gd_time))
     query = db.select([games]).where(db.and_(games.columns.Sport == gd_sport, games.columns.Date == gd_date, games.columns.Time == gd_time, games.columns.Opponent == gd_opponent, games.columns.At == gd_home_away, games.columns.Result == gd_result))
     result = engine.execute(query).fetchall()
     if not result:

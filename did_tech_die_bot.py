@@ -78,17 +78,18 @@ def create_sport_tweets(sport):
                 logging.info("Checking if {} game {} is final...".format(sport, game+1))
                 game_is_final = did_tech_die.is_game_final(result)
                 if game_is_final:
-                    logging.info("Checking if tweet is duplicated...")
-                    is_duplicate = did_tech_die.is_game_in_db(sport, date, time, opponent, home_away, result)
-                    if not is_duplicate:
-                        new_tweet = did_tech_die.set_tweet(sport, opponent, result)
-                        response = client.create_tweet(text=new_tweet)
-                        url = f"https://twitter.com/user/status/{response.data['id']}"
-                        message = "New {} tweet: {}".format(sport, url)
-                        logging.info(message)
-                        send_text("\n"+message+"\n")
-                        logging.info("Updating game data in game db...")
-                        did_tech_die.update_game_data(sport, date, time, opponent, home_away, result)
+                        time = did_tech_die.nan_time_to_time(time)
+                        logging.info("Checking if tweet is duplicated...")
+                        is_duplicate = did_tech_die.is_game_in_db(sport, date, time, opponent, home_away, result)
+                        if not is_duplicate:
+                            new_tweet = did_tech_die.set_tweet(sport, opponent, result)
+                            response = client.create_tweet(text=new_tweet)
+                            url = f"https://twitter.com/user/status/{response.data['id']}"
+                            message = "New {} tweet: {}".format(sport, url)
+                            logging.info(message)
+                            send_text("\n"+message+"\n")
+                            logging.info("Updating game data in game db...")
+                            did_tech_die.update_game_data(sport, date, time, opponent, home_away, result)
 
 #Mass tweeting based on season
 def tweet_seasonal_sports():
