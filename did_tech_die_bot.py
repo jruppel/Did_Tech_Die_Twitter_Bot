@@ -6,6 +6,8 @@ import tweepy
 import constants
 import did_tech_die
 import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 testing = constants.testing
 
@@ -85,9 +87,9 @@ def create_sport_tweets(sport):
                             new_tweet = did_tech_die.set_tweet(sport, opponent, result)
                             response = client.create_tweet(text=new_tweet)
                             url = f"https://twitter.com/user/status/{response.data['id']}"
-                            message = "New {} tweet: {}".format(sport, url)
+                            message = "Link:\n{}\nTweet:\n{}".format(url, new_tweet)
                             logging.info(message)
-                            send_text("\n"+message+"\n")
+                            send_text(message)
                             logging.info("Updating game data in game db...")
                             did_tech_die.update_game_data(sport, date, time, opponent, home_away, result)
 
@@ -111,7 +113,14 @@ def send_text(message):
     server = smtplib.SMTP(smtp_provider, 587)
     server.starttls()
     server.login(email, password)
-    server.sendmail(email, recipient, message)
+    msg = MIMEMultipart()
+    msg['From'] = email
+    msg['To'] = recipient
+    # Make sure you add a new line in the subject
+    msg['Subject'] = "New tweet\n"
+    msg.attach(MIMEText(message, 'plain'))
+    sms = msg.as_string()
+    server.sendmail(email,recipient,sms)
 
 def main():
     logging.info("Starting Did Tech Die Twitter bot")

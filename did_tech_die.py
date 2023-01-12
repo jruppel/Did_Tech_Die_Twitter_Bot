@@ -142,9 +142,9 @@ def set_tweet(sport, opponent, result):
     win_loss, tech_score, opponent_score = result_to_score(sport, result)
     if win_loss == opponent_score == None:
         if tech_score == '1st':
-            tweet = "No.\n{}: {} finished {} at the {}.\n".format(team_sport, team, tech_score, opponent)
+            tweet = "No.\n{}: {} finished {} at the {}.".format(team_sport, team, tech_score, opponent)
         else:
-            tweet = "Yes.\n{}: {} finished {} at the {}.\n".format(team_sport, team, tech_score, opponent)
+            tweet = "Yes.\n{}: {} finished {} at the {}.".format(team_sport, team, tech_score, opponent)
     else:
         if win_loss == 'W':
             tweet = "No.\n{}: {} defeats {} {} to {}.".format(team_sport, team, opponent, tech_score, opponent_score) 
