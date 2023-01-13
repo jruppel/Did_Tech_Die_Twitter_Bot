@@ -37,6 +37,7 @@ if not db.inspect(engine).has_table('games'):
           db.Column('Opponent', db.String), 
           db.Column('At', db.String),
           db.Column('Result', db.String)
+          #Todo: create a new column for tweet ID
     )
     metadata.create_all()
 games = db.Table('games', metadata, autoload=True, autoload_with=engine)
@@ -61,7 +62,7 @@ def get_tech_url(sport):
     return url 
 '''
 
-def get_game_data(url, sport):
+def get_website_data(url, sport):
     try:
         df = pd.read_html(url, header=0)[0]
         recent_games = df[df.Date.isin([current_date, yesterday_date])].where(pd.notnull(df), None)
@@ -128,8 +129,7 @@ def nan_time_to_time(time):
 
 def is_game_in_db(gd_sport, gd_date, gd_time, gd_opponent, gd_home_away, gd_result):
     logging.debug("Time for this match is {}".format(gd_time))
-    query = db.select([games]).where(db.and_(games.columns.Sport == gd_sport, games.columns.Date == gd_date, games.columns.Time == gd_time, games.columns.Opponent == gd_opponent, games.columns.At == gd_home_away, games.columns.Result == gd_result))
-    result = engine.execute(query).fetchall()
+    result = get_game_data(gd_sport, gd_date, gd_time, gd_opponent, gd_home_away, gd_result)
     if not result:
         logging.info("Tweet is not a duplicate!")
         logging.info("Result: " + str(result))
@@ -199,3 +199,15 @@ def update_game_data(sport, date, time, opponent, home_away, result):
             delete_query = db.delete(games).where(db.and_(games.columns.Sport == sport, games.columns.Date == date, games.columns.Time == time, games.columns.Opponent == opponent, games.columns.At == home_away, games.columns.Result == result))
             engine.execute(delete_query)
             logging.info("Old game data deleted!")
+
+def get_game_data(sport, date, time, opponent, home_away, result):
+    if not [x for x in (sport, time, opponent, home_away) if x is None] and result is None:
+        query = db.select([games]).where(db.and_(games.columns.Sport == sport, games.columns.Date == date, games.columns.Time == time, games.columns.Opponent == opponent, games.columns.At == home_away))
+    if not [x for x in (sport, time, result, home_away) if x is None] and opponent is None:
+        query = db.select([games]).where(db.and_(games.columns.Sport == sport, games.columns.Date == date, games.columns.Time == time, games.columns.At == home_away, games.columns.Result == result))
+    if not [x for x in (sport, time, opponent, home_away, result) if x is None]:
+        query = db.select([games]).where(db.and_(games.columns.Sport == sport, games.columns.Date == date, games.columns.Time == time, games.columns.Opponent == opponent, games.columns.At == home_away, games.columns.Result == result))
+    all_games = engine.execute(query).fetchall()
+    return all_games
+
+#Todo: delete game data and tweet for games with two rows

@@ -69,7 +69,7 @@ def create_sport_tweets(sport):
     tm.sleep(delay)
     logging.info("Checking for recent {} games...".format(sport))
     url = did_tech_die.get_tech_url(sport)
-    games = did_tech_die.get_game_data(url, sport)
+    games = did_tech_die.get_website_data(url, sport)
     if games is not None:
         for game in range(len(games)):
             sport, date, time, opponent, home_away, result = games[game][0], games[game][1], games[game][2], games[game][3], games[game][4], games[game][5]
@@ -92,6 +92,9 @@ def create_sport_tweets(sport):
                             send_text(message)
                             logging.info("Updating game data in game db...")
                             did_tech_die.update_game_data(sport, date, time, opponent, home_away, result)
+                            # Todo: If there are two rows of the same game with different results/opponent names, 
+                            # delete the first row and delete the first tweet since it's old and incorrect data
+
 
 #Mass tweeting based on season
 def tweet_seasonal_sports():
