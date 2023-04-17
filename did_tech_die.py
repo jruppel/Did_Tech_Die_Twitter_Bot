@@ -15,8 +15,8 @@ last_year = year - 1
 next_year = year + 1
 current_date = today.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
-current_date = "March 2, 2023 (Thursday)" #testing
-yesterday_date = "March 1, 2023 (Wednesday)" #testing
+#current_date = "March 2, 2023 (Thursday)" #testing
+#yesterday_date = "March 1, 2023 (Wednesday)" #testing
 #year = 2020 #testing
 #last_year = 2019 #testing
 
