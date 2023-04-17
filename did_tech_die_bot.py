@@ -86,12 +86,14 @@ def create_sport_tweets(sport):
                         if not is_duplicate:
                             new_tweet = did_tech_die.set_tweet(sport, opponent, result)
                             response = client.create_tweet(text=new_tweet)
-                            url = f"https://twitter.com/user/status/{response.data['id']}"
+                            tweet_id = response.data['id']
+                            url = f"https://twitter.com/user/status/{tweet_id}"
                             message = "Link:\n{}\nTweet:\n{}".format(url, new_tweet)
                             logging.info(message)
                             send_text(message)
                             logging.info("Updating game data in game db...")
-                            did_tech_die.update_game_data(sport, date, time, opponent, home_away, result)
+                            did_tech_die.update_game_data(sport, date, time, opponent, home_away, result, id=tweet_id)
+                            delete_incorrect_tweet(sport, date, time, opponent, home_away, result)
                             # Todo: If there are two rows of the same game with different results/opponent names, 
                             # delete the first row and delete the first tweet since it's old and incorrect data
 
@@ -124,6 +126,16 @@ def send_text(message):
     msg.attach(MIMEText(message, 'plain'))
     sms = msg.as_string()
     server.sendmail(email,recipient,sms)
+
+def delete_incorrect_tweet(gd_sport, gd_date, gd_time, gd_opponent, gd_home_away, gd_result):
+    tweet_id_with_incorrect_result = did_tech_die.get_incorrect_tweet(sport=gd_sport, date=gd_date, time=gd_time, opponent=gd_opponent, home_away=gd_home_away, result=None)
+    tweet_id_with_incorrect_opponent = did_tech_die.get_incorrect_tweet(sport=gd_sport, date=gd_date, time=gd_time, opponent=None, home_away=gd_home_away, result=gd_result)
+    logging.info("Tweet ID with incorrect result: {}".format(tweet_id_with_incorrect_result))
+    logging.info("Tweet ID with incorrect opponent: {}".format(tweet_id_with_incorrect_opponent))
+    if tweet_id_with_incorrect_result is not None:
+        client.delete_tweet(tweet_id_with_incorrect_result)
+    if tweet_id_with_incorrect_opponent is not None:
+        client.delete_tweet(tweet_id_with_incorrect_opponent)
 
 def main():
     logging.info("Starting Did Tech Die Twitter bot")

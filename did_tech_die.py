@@ -15,9 +15,8 @@ last_year = year - 1
 next_year = year + 1
 current_date = today.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
-
-#current_date = "October 8, 2022 (Saturday)" #testing
-#yesterday_date = "October 7, 2022 (Friday)" #testing
+current_date = "March 2, 2023 (Thursday)" #testing
+yesterday_date = "March 1, 2023 (Wednesday)" #testing
 #year = 2020 #testing
 #last_year = 2019 #testing
 
@@ -36,8 +35,8 @@ if not db.inspect(engine).has_table('games'):
           db.Column('Time', db.String),
           db.Column('Opponent', db.String), 
           db.Column('At', db.String),
-          db.Column('Result', db.String)
-          #Todo: create a new column for tweet ID
+          db.Column('Result', db.String),
+          db.Column('ID', db.String)
     )
     metadata.create_all()
 games = db.Table('games', metadata, autoload=True, autoload_with=engine)
@@ -103,9 +102,17 @@ def result_to_score(sport, result):
     if sport in {'Baseball', 'Womens-soccer', 'Softball', 'Womens-volleyball', 'Football', 'Mens-basketball', 'Womens-basketball', 'Womens-tennis'}:
         win_loss = result[0]
         score = result[4:]
+        reg_notes = None
+        add_notes = None
         if " " in score:
             split_score = score.split(" ", 1)
             score = split_score[0]
+            reg_notes = split_score[1].lstrip()
+            logging.info("Notes: {}".format(reg_notes))
+        if reg_notes and len(reg_notes.split(" ")) > 2:
+            split_notes = reg_notes.split(" ", 2)
+            reg_notes = " ".join(split_notes[:2])
+            add_notes = split_notes[2]
         tech_score = int(score.split("-")[0])
         opponent_score = int(score.split("-")[1])
         if (win_loss == 'W' and opponent_score >= tech_score) or (win_loss == 'L' and opponent_score <= tech_score):
@@ -120,7 +127,7 @@ def result_to_score(sport, result):
                 tech_score = results[0].split(" ")[1]
             if sport in {'Womens-track-and-field', 'Womens-cross-country'}:
                 tech_score = results[1].split(" ")[2]
-    return win_loss, tech_score, opponent_score
+    return win_loss, tech_score, opponent_score, reg_notes, add_notes
 
 def nan_time_to_time(time):
     if time != time:
@@ -139,19 +146,33 @@ def is_game_in_db(gd_sport, gd_date, gd_time, gd_opponent, gd_home_away, gd_resu
 
 def set_tweet(sport, opponent, result):
     team_sport = get_team_sport(sport)
-    win_loss, tech_score, opponent_score = result_to_score(sport, result)
+    win_loss, tech_score, opponent_score, reg_notes, add_notes = result_to_score(sport, result)
     if win_loss == opponent_score == None:
         if tech_score == '1st':
             tweet = "No.\n{}: {} finished {} at the {}.".format(team_sport, team, tech_score, opponent)
         else:
             tweet = "Yes.\n{}: {} finished {} at the {}.".format(team_sport, team, tech_score, opponent)
+    elif add_notes:
+        if win_loss == 'W':
+            tweet = "No.\n{}: {} defeats {} {} to {} {}.\n{}.".format(team_sport, team, opponent, tech_score, opponent_score, reg_notes, add_notes) 
+        if win_loss == 'T':
+            tweet = "No.\n{}: {} ties {} {} to {} {}.\n{}.".format(team_sport, team, opponent, tech_score, opponent_score, reg_notes, add_notes)
+        if win_loss == 'L':
+            tweet = "Yes.\n{}: {} defeats {} {} to {} {}.\n{}.".format(team_sport, opponent, team, opponent_score, tech_score, reg_notes, add_notes) 
+    elif reg_notes:
+        if win_loss == 'W':
+            tweet = "No.\n{}: {} defeats {} {} to {} {}.".format(team_sport, team, opponent, tech_score, opponent_score, reg_notes) 
+        if win_loss == 'T':
+            tweet = "No.\n{}: {} ties {} {} to {} {}.".format(team_sport, team, opponent, tech_score, opponent_score, reg_notes)
+        if win_loss == 'L':
+            tweet = "Yes.\n{}: {} defeats {} {} to {} {}.".format(team_sport, opponent, team, opponent_score, tech_score, reg_notes)
     else:
         if win_loss == 'W':
             tweet = "No.\n{}: {} defeats {} {} to {}.".format(team_sport, team, opponent, tech_score, opponent_score) 
         if win_loss == 'T':
             tweet = "No.\n{}: {} ties {} {} to {}.".format(team_sport, team, opponent, tech_score, opponent_score)
         if win_loss == 'L':
-            tweet = "Yes.\n{}: {} defeats {} {} to {}.".format(team_sport, opponent, team, opponent_score, tech_score) 
+            tweet = "Yes.\n{}: {} defeats {} {} to {} {}.".format(team_sport, opponent, team, opponent_score, tech_score)
     return tweet
 
 def get_team_sport(sport):
@@ -185,9 +206,9 @@ def get_team_sport(sport):
         team_sport = "Women's XC 🏃"
     return team_sport
 
-def update_game_data(sport, date, time, opponent, home_away, result):
+def update_game_data(sport, date, time, opponent, home_away, result, id):
     #Insert new game data
-    insert_query = db.insert(games).values(Sport=sport, Date=date, Time=time, Opponent=opponent, At=home_away, Result=result)
+    insert_query = db.insert(games).values(Sport=sport, Date=date, Time=time, Opponent=opponent, At=home_away, Result=result, ID=id)
     engine.execute(insert_query)
     logging.info("New game data inserted!")
     #Delete old game data
@@ -211,3 +232,15 @@ def get_game_data(sport, date, time, opponent, home_away, result):
     return all_games
 
 #Todo: delete game data and tweet for games with two rows
+def get_incorrect_tweet(sport, date, time, opponent, home_away, result):
+    game_data = get_game_data(sport, date, time, opponent, home_away, result)
+    row_count = len(game_data)-1
+    tweet_id = None
+    if result == None:
+        logging.info("Number of tweets with incorrect result: {}".format(row_count))
+    if opponent == None:
+        logging.info("Number of tweets with incorrect opponent: {}".format(row_count))
+    if row_count >= 1:
+        tweet_id = game_data[0][6]
+    return game_data, tweet_id
+    
