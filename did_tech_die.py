@@ -172,7 +172,7 @@ def set_tweet(sport, opponent, result):
         if win_loss == 'T':
             tweet = "No.\n{}: {} ties {} {} to {}.".format(team_sport, team, opponent, tech_score, opponent_score)
         if win_loss == 'L':
-            tweet = "Yes.\n{}: {} defeats {} {} to {} {}.".format(team_sport, opponent, team, opponent_score, tech_score)
+            tweet = "Yes.\n{}: {} defeats {} {} to {}.".format(team_sport, opponent, team, opponent_score, tech_score)
     return tweet
 
 def get_team_sport(sport):
@@ -242,5 +242,5 @@ def get_incorrect_tweet(sport, date, time, opponent, home_away, result):
         logging.info("Number of tweets with incorrect opponent: {}".format(row_count))
     if row_count >= 1:
         tweet_id = game_data[0][6]
-    return game_data, tweet_id
+    return tweet_id
     
