@@ -7,6 +7,7 @@ import sqlite3
 import sqlalchemy as db
 import constants
 import logging
+import url_test
 
 today = date.today()
 yesterday = today - timedelta(days = 1)
@@ -15,8 +16,8 @@ last_year = year - 1
 next_year = year + 1
 current_date = today.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
 yesterday_date = yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
-#current_date = "March 2, 2023 (Thursday)" #testing
-#yesterday_date = "March 1, 2023 (Wednesday)" #testing
+current_date = "April 17, 2023 (Monday)" #testing
+yesterday_date = "April 16, 2023 (Sunday)" #testing
 #year = 2020 #testing
 #last_year = 2019 #testing
 
@@ -168,7 +169,7 @@ def set_tweet(sport, opponent, result):
             tweet = "Yes.\n{}: {} defeats {} {} to {} {}.".format(team_sport, opponent, team, opponent_score, tech_score, reg_notes)
     else:
         if win_loss == 'W':
-            tweet = "No.\n{}: {} defeats {} {} to {}.".format(team_sport, team, opponent, tech_score, opponent_score) 
+            tweet = "No.\n{}: {} {} defeats {} {} {} to {}.".format(team_sport, url_test.boxscore_team_record_split, team, url_test.boxscore_oppo_record_split, opponent, tech_score, opponent_score) 
         if win_loss == 'T':
             tweet = "No.\n{}: {} ties {} {} to {}.".format(team_sport, team, opponent, tech_score, opponent_score)
         if win_loss == 'L':
