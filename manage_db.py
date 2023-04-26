@@ -38,7 +38,7 @@ def get_game_data(sport, date, time, opponent, home_away, result):
     all_games = engine.execute(query).fetchall()
     return all_games
 
-def insert_game_data(sport, date, time, opponent, home_away, result, id):
+def insert_new_game_data(sport, date, time, opponent, home_away, result, id):
     #Insert new game data
     insert_query = db.insert(games).values(Sport=sport, Date=date, Time=time, Opponent=opponent, At=home_away, Result=result, ID=id)
     engine.execute(insert_query)
