@@ -123,3 +123,5 @@ def main():
     logging.info("Starting Did Tech Die Twitter bot")
     tweet_seasonal_sports()
     logging.info("Ending Did Tech Die Twitter bot\n")
+
+main()
