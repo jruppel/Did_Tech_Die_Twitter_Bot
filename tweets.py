@@ -119,5 +119,7 @@ def tweet_seasonal_sports():
     elif season == 'autumn':
         for sport in constants.autumn_sports:
             create_tweets(sport)
-
-create_tweets("softball")
+def main():
+    logging.info("Starting Did Tech Die Twitter bot")
+    tweet_seasonal_sports()
+    logging.info("Ending Did Tech Die Twitter bot\n")
