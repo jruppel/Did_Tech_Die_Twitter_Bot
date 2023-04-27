@@ -18,7 +18,7 @@ def create_tweets(sport):
             sport,date,time,opponent,home_away,result,incorrect_tweet_id=games[game][0],games[game][1],games[game][2],games[game][3],games[game][4],games[game][5],None
             time,game_is_exhibiton,game_is_final,is_duplicate=game_info.nan_time_to_time(time),game_info.is_game_exhibition(opponent),game_info.is_game_final(result),manage_db.is_game_in_db(sport,date,time,opponent,home_away,result)
             if not game_is_exhibiton and game_is_final and not is_duplicate:
-                new_tweet=set_tweet(url,sport,date,time,opponent,result)
+                new_tweet=set_tweet(url,sport,date,time,opponent,home_away,result)
                 response=client.create_tweet(text=new_tweet)
                 new_tweet_id=response.data['id']
                 url=f"https://twitter.com/user/status/{new_tweet_id}"
@@ -42,11 +42,11 @@ def create_tweets(sport):
 def delete_incorrect_tweet(tweet_id):
     client.delete_tweet(tweet_id)
 
-def set_tweet(url,sport,date,time,opponent,result):
+def set_tweet(url,sport,date,time,opponent,home_away,result):
     team_sport=game_info.get_team_sport(sport)
     win_loss,tech_score,opponent_score,reg_notes,add_notes=game_info.result_to_score(sport,result)
     team_record,opponent_record=web_scraping.get_boxscore_records(
-        url,sport,date,time,opponent
+        url,sport,date,time,opponent,home_away
         )
     if win_loss==opponent_score==None:
         if tech_score=='1st':
@@ -69,7 +69,7 @@ def set_tweet(url,sport,date,time,opponent,result):
     elif reg_notes:
         if win_loss=='W':
             tweet="No.\n{}: {} {} defeats {} {} {} to {} {}.".format(
-                team_sport,team_record,team,opponent,tech_score,opponent_score,reg_notes
+                team_sport,team_record,team,opponent_record,opponent,tech_score,opponent_score,reg_notes
                 ) 
         elif win_loss=='T':
             tweet="No.\n{}: {} {} ties {} {} {} to {} {}.".format(
@@ -90,7 +90,7 @@ def set_tweet(url,sport,date,time,opponent,result):
                 )
         elif win_loss == 'L':
             tweet = "Yes.\n{}: {} {} defeats {} {} {} to {}.".format(
-                team_sport,opponent_record,team_record,opponent,team,opponent_score,tech_score
+                team_sport,opponent_record,opponent,team_record,team,opponent_score,tech_score
                 )
     return tweet
 
@@ -124,4 +124,5 @@ def main():
     tweet_seasonal_sports()
     logging.info("Ending Did Tech Die Twitter bot\n")
 
-main()
+#main()
+create_tweets("baseball")
