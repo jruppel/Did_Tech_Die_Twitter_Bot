@@ -41,28 +41,15 @@ def get_website_data(url, sport):
         constants.logging.debug(games)
         return games
     
-def get_boxscore_records(sport_url,sport,date,time,opponent,home_away):
-    sport_page,href_sport,href_date=urllib.request.urlopen(sport_url),str.capitalize(sport),date.split('(')[0].strip()
+def get_boxscore_records(sport_url,opponent):
+    sport_page=urllib.request.urlopen(sport_url)
     sport_soup=BeautifulSoup(sport_page,"html.parser")
-    if home_away=="Home":
-        try:
-            href_link=sport_soup.find('a',{'aria-label':'Box score of {} vs {} on {} at {}'.format(href_sport,opponent,href_date,time)})['href']
-        except TypeError:
-            try:
-                href_link=sport_soup.find('a',{'aria-label':'Box score of {} vs {}  on {} at {}'.format(href_sport,opponent,href_date,time)})['href']
-            except TypeError:
-                logging.warning("Box score not found!")
-    if home_away=="Away":
-        try:
-            href_link=sport_soup.find('a',{'aria-label':'Box score of {} at {} on {} at {}'.format(href_sport,opponent,href_date,time)})['href']
-        except TypeError:
-            try:
-                href_link=sport_soup.find('a',{'aria-label':'Box score of {} at {}  on {} at {}'.format(href_sport,opponent,href_date,time)})['href']
-            except TypeError:
-                logging.warning("Box score not found!")  
+    # Retrieve the last a tag which has the text Box Score's href attribute value
+    href_link = sport_soup.find_all('a',text="Box Score")[-1]['href']
     boxscore_page = urllib.request.urlopen(url+'{}'.format(href_link))
-    boxscore_soup = BeautifulSoup(boxscore_page, "html.parser")
-    boxscore_matchup = boxscore_soup.find('h2', {'class':'hide text-center text-uppercase hide-on-medium-down'}).text
+    boxscore_soup = BeautifulSoup(boxscore_page,"html.parser")
+    # Retrieve the text for the h2 tag with the team names and records
+    boxscore_matchup = boxscore_soup.find('h2',{'class':'hide text-center text-uppercase hide-on-medium-down'}).text
     boxscore_opponent_split = boxscore_matchup.split(opponent)[1].lstrip()
     boxscore_opponent_record = re.findall(f'[^{")"}]+\)?', boxscore_opponent_split)[0]
     boxscore_team_split = boxscore_matchup.split(team)[1].lstrip()
