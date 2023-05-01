@@ -6,7 +6,7 @@ import urllib.request
 from bs4 import BeautifulSoup
 import constants
 
-year,last_year,next_year,today,yesterday,url,team,logging=constants.year,constants.last_year,constants.next_year,constants.today,constants.yesterday,constants.url,constants.team,constants.logging
+year,last_year,next_year,today,yesterday_date,current_date,url,team,team_abbr,logging=constants.year,constants.last_year,constants.next_year,constants.today,constants.yesterday_date,constants.current_date,constants.url,constants.team,constants.team_abbr,constants.logging
 
 def get_sport_url(sport):
     if sport in {'mens-basketball','womens-basketball','womens-tennis','womens-bowling','mens-golf'}:
@@ -25,33 +25,37 @@ def get_sport_url(sport):
 def get_website_data(url, sport):
     try:
         df=pd.read_html(url, header=0)[0]
-        recent_games=df[df.Date.isin([constants.current_date,constants.yesterday_date])].where(pd.notnull(df),None)
+        recent_games=df[df.Date.isin([current_date,yesterday_date])].where(pd.notnull(df),None)
     except AttributeError:
-        constants.logging.warning("Current year schedule for this sport has not been created yet!")
+        logging.warning("Current year schedule for this sport has not been created yet!")
         return
     else:
         if recent_games.empty:
-            constants.logging.info("Tech did not play recently in this sport!")
+            logging.info("Tech did not play recently in this sport!")
             return   
         tech_games=recent_games[~recent_games.Opponent.str.contains("vs.")]
         game_info=tech_games[['Date', 'Time', 'Opponent', 'At', 'Result']]
         game_info.insert(0, 'Sport', sport.capitalize())
         games=game_info.values.tolist()
-        constants.logging.info("Tech played recently in this sport!")
-        constants.logging.debug(games)
+        logging.info("Tech played recently in this sport!")
+        logging.debug(games)
         return games
     
 def get_boxscore_records(sport_url,opponent):
     sport_page=urllib.request.urlopen(sport_url)
     sport_soup=BeautifulSoup(sport_page,"html.parser")
     # Retrieve the last a tag which has the text Box Score's href attribute value
-    href_link = sport_soup.find_all('a',text="Box Score")[-1]['href']
-    boxscore_page = urllib.request.urlopen(url+'{}'.format(href_link))
+    href_link=sport_soup.find_all('a',text='Box Score')[-1]['href']
+    boxscore_page = urllib.request.urlopen("{}{}".format(url,href_link))
     boxscore_soup = BeautifulSoup(boxscore_page,"html.parser")
     # Retrieve the text for the h2 tag with the team names and records
     boxscore_matchup = boxscore_soup.find('h2',{'class':'hide text-center text-uppercase hide-on-medium-down'}).text
+    logging.info("Boxscore matchup: {}".format(boxscore_matchup))
+    try:
+        boxscore_team_split = boxscore_matchup.split(team)[1].lstrip()
+    except IndexError:
+        boxscore_team_split = boxscore_matchup.split(team_abbr)[1].lstrip()
+    boxscore_team_record = re.findall(f'[^{")"}]+\)?', boxscore_team_split)[0]
     boxscore_opponent_split = boxscore_matchup.split(opponent)[1].lstrip()
     boxscore_opponent_record = re.findall(f'[^{")"}]+\)?', boxscore_opponent_split)[0]
-    boxscore_team_split = boxscore_matchup.split(team)[1].lstrip()
-    boxscore_team_record = re.findall(f'[^{")"}]+\)?', boxscore_team_split)[0]
     return boxscore_team_record,boxscore_opponent_record
