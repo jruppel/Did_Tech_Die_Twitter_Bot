@@ -42,54 +42,34 @@ def create_tweets(sport):
 def delete_incorrect_tweet(tweet_id):
     client.delete_tweet(tweet_id)
 
+def get_separator(win_loss):
+    if win_loss=='W' or win_loss=='L':
+        separator="defeats"
+    elif win_loss=='T':
+        separator="ties"
+    elif win_loss==None:
+        separator="finished"
+    return separator
+
 def set_tweet(url,sport,opponent,result):
     team_sport=game_info.get_team_sport(sport)
-    win_loss,tech_score,opponent_score,reg_notes,add_notes=game_info.result_to_score(sport,result)
+    win_loss,team_score,opponent_score,reg_notes,add_notes=game_info.result_to_score(sport,result)
     team_record,opponent_record=web_scraping.get_boxscore_records(url,opponent)
-    if win_loss==opponent_score==None:
-        if tech_score=='1st':
-            tweet="No.\n{}: {} finished {} at the {}.".format(team_sport,team,tech_score,opponent)
-        else:
-            tweet="Yes.\n{}: {} finished {} at the {}.".format(team_sport,team,tech_score,opponent)
-    elif add_notes:
-        if win_loss=='W':
-            tweet="No.\n{}: {} defeats {} {} to {} {}.\n{}.".format(
-                team_sport,team_record,team,opponent_record,opponent,tech_score,opponent_score,reg_notes,add_notes
-                ) 
-        elif win_loss=='T':
-            tweet="No.\n{}: {} {} ties {} {} {} to {} {}.\n{}.".format(
-                team_sport,team_record,team,opponent_record,opponent,tech_score,opponent_score,reg_notes,add_notes
-                )
+    separator=get_separator(win_loss)
+    if win_loss and opponent_score is not None:
+        if win_loss=='W' or win_loss=='T':
+            pos_neg,win_team_record,win_team,lose_team_record,lose_team,win_score,lose_score="No.",team_record,team,opponent_record,opponent,team_score,opponent_score
         elif win_loss=='L':
-            tweet="Yes.\n{}: {} {} defeats {} {} {} to {} {}.\n{}.".format(
-                team_sport,opponent_record,opponent,team_record,team,opponent_score,tech_score,reg_notes,add_notes
-                ) 
-    elif reg_notes:
-        if win_loss=='W':
-            tweet="No.\n{}: {} {} defeats {} {} {} to {} {}.".format(
-                team_sport,team_record,team,opponent_record,opponent,tech_score,opponent_score,reg_notes
-                ) 
-        elif win_loss=='T':
-            tweet="No.\n{}: {} {} ties {} {} {} to {} {}.".format(
-                team_sport,team_record,team,opponent_record,opponent,tech_score,opponent_score,reg_notes
-                )
-        elif win_loss=='L':
-            tweet="Yes.\n{}: {} {} defeats {} {} {} to {} {}.".format(
-                team_sport,opponent_record,opponent,team_record,team,opponent_score,tech_score,reg_notes
-                )
+            pos_neg,win_team_record,win_team,lose_team_record,lose_team,win_score,lose_score="Yes.",opponent_record,opponent,team_record,team,opponent_score,team_score
+        tweet="{}\n{} {} {} {} {} {} {} to {}{}.\n{}".format(
+        pos_neg,team_sport,win_team_record,win_team,separator,lose_team_record,lose_team,win_score,lose_score,reg_notes,add_notes
+        )
     else:
-        if win_loss=='W':
-            tweet="No.\n{}: {} {} defeats {} {} {} to {}.".format(
-                team_sport,team_record,team,opponent_record,opponent,tech_score,opponent_score
-                ) 
-        elif win_loss=='T':
-            tweet = "No.\n{}: {} {} ties {} {} {} to {}.".format(
-                team_sport,team_record,team,opponent_record,opponent,tech_score,opponent_score
-                )
-        elif win_loss == 'L':
-            tweet = "Yes.\n{}: {} {} defeats {} {} {} to {}.".format(
-                team_sport,opponent_record,opponent,team_record,team,opponent_score,tech_score
-                )
+        if team_score=='1st':
+            pos_neg="No."
+        else:
+            pos_neg="Yes."
+        tweet="{}\n{} {} {} {} at the {}{}.\n{}".format(pos_neg,team_sport,team,team_score,opponent,reg_notes,add_notes)
     return tweet
 
 def get_incorrect_tweet(sport, date, time, opponent, home_away, result):

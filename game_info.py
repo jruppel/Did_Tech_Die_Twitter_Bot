@@ -25,12 +25,12 @@ def result_to_score(sport, result):
     if sport in {'Baseball', 'Womens-soccer', 'Softball', 'Womens-volleyball', 'Football', 'Mens-basketball', 'Womens-basketball', 'Womens-tennis'}:
         win_loss = result[0]
         score = result[4:]
-        reg_notes = None
-        add_notes = None
+        reg_notes = ""
+        add_notes = ""
         if " " in score:
             split_score = score.split(" ", 1)
             score = split_score[0]
-            reg_notes = split_score[1].lstrip()
+            reg_notes = split_score[1]
             logging.info("Notes: {}".format(reg_notes))
         if reg_notes and len(reg_notes.split(" ")) > 2:
             split_notes = reg_notes.split(" ", 2)
@@ -59,31 +59,31 @@ def nan_time_to_time(time):
 
 def get_team_sport(sport):
     if sport=='Football':
-        team_sport="🏈"
+        team_sport="🏈:"
     elif sport=='Mens-basketball':
-        team_sport="Men's 🏀"
+        team_sport="Men's 🏀:"
     elif sport=='Womens-basketball':
-        team_sport="Women's 🏀"
+        team_sport="Women's 🏀:"
     elif sport=="Baseball":
-        team_sport="⚾"
+        team_sport="⚾:"
     elif sport=="Softball":
-        team_sport="🥎"
+        team_sport="🥎:"
     elif sport=="Womens-soccer":
-        team_sport="⚽"
+        team_sport="⚽:"
     elif sport=='Womens-volleyball':
-        team_sport="🏐"
+        team_sport="🏐:"
     elif sport=='Womens-tennis':
-        team_sport="🎾"
+        team_sport="🎾:"
     elif sport=='Mens-golf':
-        team_sport="⛳"
+        team_sport="⛳:"
     elif sport=="Womens-bowling":
-        team_sport="🎳"
+        team_sport="🎳:"
     elif sport=="Mens-track-and-field":
-        team_sport="Men's T&F 🏃"
+        team_sport="Men's T&F 🏃:"
     elif sport=="Womens-track-and-field":
-        team_sport="Women's T&F 🏃"
+        team_sport="Women's T&F 🏃:"
     elif sport=="Mens-cross-country":
-        team_sport="Men's XC 🏃"
+        team_sport="Men's XC 🏃:"
     elif sport=="Womens-cross-country":
-        team_sport="Women's XC 🏃"
+        team_sport="Women's XC 🏃:"
     return team_sport
