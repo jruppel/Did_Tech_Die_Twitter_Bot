@@ -49,7 +49,11 @@ def get_boxscore_records(sport_url,opponent):
     boxscore_page = urllib.request.urlopen("{}{}".format(url,href_link))
     boxscore_soup = BeautifulSoup(boxscore_page,"html.parser")
     # Retrieve the text for the h2 tag with the team names and records
-    boxscore_matchup = boxscore_soup.find('h2',{'class':'hide text-center text-uppercase hide-on-medium-down'}).text
+    try:
+        boxscore_matchup = boxscore_soup.find('h2',{'class':'hide text-center text-uppercase hide-on-medium-down'}).text
+    except AttributeError:
+        logging.warning("Matchup not found on boxscore page! No records will be added to tweet!")
+        return "",""
     logging.info("Boxscore matchup: {}".format(boxscore_matchup))
     try:
         boxscore_team_split = boxscore_matchup.split(team)[1].lstrip()

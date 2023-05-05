@@ -1,5 +1,5 @@
 # Tweets
-
+import re
 import constants
 import text_alerts
 import web_scraping
@@ -61,7 +61,7 @@ def set_tweet(url,sport,opponent,result):
             pos_neg,win_team_record,win_team,lose_team_record,lose_team,win_score,lose_score="No.",team_record,team,opponent_record,opponent,team_score,opponent_score
         elif win_loss=='L':
             pos_neg,win_team_record,win_team,lose_team_record,lose_team,win_score,lose_score="Yes.",opponent_record,opponent,team_record,team,opponent_score,team_score
-        tweet="{}\n{} {} {} {} {} {} {} to {}{}.\n{}".format(
+        tweet_text="{}\n{} {} {} {} {} {} {} to {}{}.\n{}".format(
         pos_neg,team_sport,win_team_record,win_team,separator,lose_team_record,lose_team,win_score,lose_score,reg_notes,add_notes
         )
     else:
@@ -69,7 +69,8 @@ def set_tweet(url,sport,opponent,result):
             pos_neg="No."
         else:
             pos_neg="Yes."
-        tweet="{}\n{} {} {} {} at the {}{}.\n{}".format(pos_neg,team_sport,team,team_score,opponent,reg_notes,add_notes)
+        tweet_text="{}\n{} {} {} {} at the {}{}.\n{}".format(pos_neg,team_sport,team,team_score,opponent,reg_notes,add_notes)
+    tweet=re.sub(' +', ' ', tweet_text)
     return tweet
 
 def get_incorrect_tweet(sport, date, time, opponent, home_away, result):
@@ -102,4 +103,5 @@ def main():
     tweet_seasonal_sports()
     logging.info("Ending Did Tech Die Twitter bot\n")
 
-main()
+#main()
+create_tweets('womens-basketball')
