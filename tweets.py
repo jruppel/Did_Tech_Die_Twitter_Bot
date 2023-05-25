@@ -54,9 +54,9 @@ def get_separator(win_loss):
 def set_tweet(url,sport,opponent,result):
     team_sport=game_info.get_team_sport(sport)
     win_loss,team_score,opponent_score,reg_notes,add_notes=game_info.result_to_score(sport,result)
-    team_record,opponent_record=web_scraping.get_boxscore_records(url)
     separator=get_separator(win_loss)
     if win_loss and opponent_score is not None:
+        team_record,opponent_record=web_scraping.get_boxscore_records(url)
         if win_loss=='W' or win_loss=='T':
             pos_neg,win_team_record,win_team,lose_team_record,lose_team,win_score,lose_score="No.",team_record,team,opponent_record,opponent,team_score,opponent_score
         elif win_loss=='L':
