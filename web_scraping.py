@@ -5,8 +5,9 @@ import pandas as pd
 import urllib.request
 from bs4 import BeautifulSoup
 import constants
+import requests
 
-year,last_year,next_year,today,yesterday_date,current_date,url,team,team_abbr,boxscore_split,logging=constants.year,constants.last_year,constants.next_year,constants.today,constants.yesterday_date,constants.current_date,constants.url,constants.team,constants.team_abbr,constants.boxscore_split,constants.logging
+year,last_year,next_year,today,yesterday_date,current_date,url,team,team_abbr,logging=constants.year,constants.last_year,constants.next_year,constants.today,constants.yesterday_date,constants.current_date,constants.url,constants.team,constants.team_abbr,constants.logging
 
 def get_sport_url(sport):
     if sport in {'mens-basketball','womens-basketball','womens-tennis','womens-bowling','mens-golf'}:
@@ -42,30 +43,23 @@ def get_website_data(url,sport):
         return games
 
 def get_boxscore_records(sport_url):
+    # Open and parse the schedule page
     sport_page=urllib.request.urlopen(sport_url)
     sport_soup=BeautifulSoup(sport_page,"html.parser")
     # Retrieve the last a tag which has the text Box Score's href attribute value
     href_link=sport_soup.find_all('a',text='Box Score')[-1]['href']
-    boxscore_page=urllib.request.urlopen("{}{}".format(url,href_link))
+    # Open and parse the boxscore page
+    boxscore_page=requests.get("{}{}".format(url,href_link)).text
     boxscore_soup=BeautifulSoup(boxscore_page,"html.parser")
-    # Retrieve the boxscore text for the h2 tag with the team names and records
-    try:
-        boxscore_matchup=boxscore_soup.find('h2',{'class':'hide text-center text-uppercase hide-on-medium-down'}).text
-    except AttributeError:
-        try:
-            boxscore_matchup = boxscore_soup.find('h2',{'class':'hide'}).text
-        except AttributeError:
-            logging.warning("Matchup not found on boxscore page! No records will be added to tweet!")
-            return "",""
+    # Retreive the matchup info using the two () substrings on the boxscore page
+    boxscore_matchup=re.search(r'.*(\(.*?\)).*(\(.*?\))',boxscore_soup.get_text()).group(0)
+    boxscore_records=re.findall(r'(\(.*?\))',boxscore_matchup)
     logging.info("Boxscore matchup: {}".format(boxscore_matchup))
     # Retrieve team order from boxscore and split according
-    if boxscore_matchup.index(team)==0 or boxscore_matchup.index(team_abbr)==0:
-        boxscore_team_split=boxscore_matchup.split(boxscore_split)[0]
-        boxscore_opponent_split=boxscore_matchup.split(boxscore_split)[1].lstrip()
-    else:    
-        boxscore_team_split=boxscore_matchup.split(boxscore_split)[1].lstrip()
-        boxscore_opponent_split=boxscore_matchup.split(boxscore_split)[0]
-    # Regex search for '(' and ')' which inidicate the records
-    boxscore_team_record=re.search(r'(\(.*?\))',boxscore_team_split).group(1)
-    boxscore_opponent_record=re.search(r'(\(.*?\))',boxscore_opponent_split).group(1)
+    if boxscore_matchup.index(team)!=0:
+        boxscore_team_record,boxscore_opponent_record=boxscore_records[1],boxscore_records[0]
+    elif boxscore_matchup.index(team)==0 or boxscore_matchup.index(team_abbr)==0:    
+        boxscore_team_record,boxscore_opponent_record=boxscore_records[0],boxscore_records[1]
+    print(boxscore_team_record)
+    print(boxscore_opponent_record)
     return boxscore_team_record,boxscore_opponent_record
