@@ -60,6 +60,4 @@ def get_boxscore_records(sport_url):
         boxscore_team_record,boxscore_opponent_record=boxscore_records[1],boxscore_records[0]
     elif boxscore_matchup.index(team)==0 or boxscore_matchup.index(team_abbr)==0:    
         boxscore_team_record,boxscore_opponent_record=boxscore_records[0],boxscore_records[1]
-    print(boxscore_team_record)
-    print(boxscore_opponent_record)
     return boxscore_team_record,boxscore_opponent_record
