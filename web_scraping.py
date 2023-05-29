@@ -49,7 +49,7 @@ def get_boxscore_records(sport_url):
         sport_page=urllib.request.urlopen(sport_url)
         sport_soup=BeautifulSoup(sport_page,"html.parser")
         # Retrieve the last a tag which has the text Box Score's href attribute value
-        href_link=sport_soup.find_all('a',text='Box Score')[-1]['href']
+        href_link=sport_soup.find_all('a',text='Box Score')[-8]['href']
         # Open and parse the boxscore page
         boxscore_page=requests.get("{}{}".format(url,href_link)).text
         boxscore_soup=BeautifulSoup(boxscore_page,"html.parser")
@@ -58,16 +58,19 @@ def get_boxscore_records(sport_url):
         boxscore_records=re.findall(r'(\(.*?\))',boxscore_matchup)
         logging.info("Boxscore matchup: {}".format(boxscore_matchup))
         # Retrieve team order from boxscore and split according
-        if boxscore_matchup.index(team)!=0:
+        if (team in boxscore_matchup and boxscore_matchup.index(team)==0) or (team_abbr in boxscore_matchup and boxscore_matchup.index(team_abbr)==0):
+            boxscore_team_record,boxscore_opponent_record=boxscore_records[0],boxscore_records[1]    
+        else: 
             boxscore_team_record,boxscore_opponent_record=boxscore_records[1],boxscore_records[0]
-        elif boxscore_matchup.index(team)==0 or boxscore_matchup.index(team_abbr)==0:    
-            boxscore_team_record,boxscore_opponent_record=boxscore_records[0],boxscore_records[1]
         # Retrieve only the overall records if any additional exist
         if " " or "," in boxscore_team_record:
             boxscore_team_record="({})".format(re.findall(r"\d+-\d+",boxscore_team_record)[0])
         if " " or "," in boxscore_opponent_record:
             boxscore_opponent_record="({})".format(re.findall(r"\d+-\d+",boxscore_opponent_record)[0])
+        logging.info("Team record: {} Opponent record: {}".format(boxscore_team_record,boxscore_opponent_record))
         return boxscore_team_record,boxscore_opponent_record
     except Exception as e:
         logging.warning("No boxscore found! Exception occured: {}! Continuing with no boxscore...".format(e))
         return "",""
+
+get_boxscore_records("https://latechsports.com/sports/football/schedule/2022?grid=true")
