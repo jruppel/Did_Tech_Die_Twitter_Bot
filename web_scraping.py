@@ -49,7 +49,7 @@ def get_boxscore_records(sport_url):
         sport_page=urllib.request.urlopen(sport_url)
         sport_soup=BeautifulSoup(sport_page,"html.parser")
         # Retrieve the last a tag which has the text Box Score's href attribute value
-        href_link=sport_soup.find_all('a',text='Box Score')[-8]['href']
+        href_link=sport_soup.find_all('a',text='Box Score')[-1]['href']
         # Open and parse the boxscore page
         boxscore_page=requests.get("{}{}".format(url,href_link)).text
         boxscore_soup=BeautifulSoup(boxscore_page,"html.parser")
@@ -72,5 +72,3 @@ def get_boxscore_records(sport_url):
     except Exception as e:
         logging.warning("No boxscore found! Exception occured: {}! Continuing with no boxscore...".format(e))
         return "",""
-
-get_boxscore_records("https://latechsports.com/sports/football/schedule/2022?grid=true")
