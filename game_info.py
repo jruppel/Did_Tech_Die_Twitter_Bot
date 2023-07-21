@@ -30,7 +30,7 @@ def result_to_score(sport, result):
         if " " in score:
             split_score = score.split(" ", 1)
             score = split_score[0]
-            reg_notes = split_score[1]
+            reg_notes = split_score[1].lstrip()
             logging.info("Notes: {}".format(reg_notes))
         if reg_notes and len(reg_notes.split(" ")) > 2:
             split_notes = reg_notes.split(" ", 2)

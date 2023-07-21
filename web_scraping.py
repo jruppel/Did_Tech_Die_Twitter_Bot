@@ -42,6 +42,12 @@ def get_website_data(url,sport):
         logging.debug(games)
         return games
 
+def get_team_rankings(boxscore_matchup):
+    team_ranking=""
+    opponent_ranking=""
+    if "#" in boxscore_matchup:
+        re.search(r"#([^ ]*)",)
+    
 def get_boxscore_records(sport_url):
     #Doing a catch-all try-except for now since some boxscore pages or team records may not exist 
     try:
