@@ -60,7 +60,7 @@ def get_boxscore_records(sport_url):
         boxscore_page=requests.get("{}{}".format(url,href_link)).text
         boxscore_soup=BeautifulSoup(boxscore_page,"html.parser")
         # Retreive the matchup info using the two () substrings on the boxscore page
-        boxscore_matchup=re.search(r'.*(\(.*?\)).*(\(.*?\))',boxscore_soup.get_text()).group(0)
+        boxscore_matchup=re.search(r'.*(\(.*?\)).*(\(.*?\))',boxscore_soup.get_text()).group(0).strip()
         boxscore_records=re.findall(r'(\(.*?\))',boxscore_matchup)
         logging.info("Boxscore matchup: {}".format(boxscore_matchup))
         # Retrieve team order from boxscore and split according
