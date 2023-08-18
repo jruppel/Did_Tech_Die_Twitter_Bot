@@ -61,7 +61,7 @@ def set_tweet(url,sport,opponent,result):
             pos_neg,win_team_record,win_team,lose_team_record,lose_team,win_score,lose_score="No.",team_record,team,opponent_record,opponent,team_score,opponent_score
         elif win_loss=='L':
             pos_neg,win_team_record,win_team,lose_team_record,lose_team,win_score,lose_score="Yes.",opponent_record,opponent,team_record,team,opponent_score,team_score
-        tweet_text="{}\n{} {} {} {} {} {} {} to {} {}.\n{}".format(pos_neg,team_sport,win_team,win_team_record,separator,lose_team,lose_team_record,win_score,lose_score,reg_notes,add_notes)
+        tweet_text="{}\n{} {} {} {} {} {} {} to {} {}.\n{}".format(pos_neg,team_sport,win_team_record,win_team,separator,lose_team_record,lose_team,win_score,lose_score,reg_notes,add_notes)
     else:
         if team_score=='1st':
             pos_neg="No."
