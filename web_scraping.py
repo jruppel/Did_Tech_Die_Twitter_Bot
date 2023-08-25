@@ -48,9 +48,17 @@ def get_team_rankings(boxscore_matchup):
     if "#" in boxscore_matchup:
         re.search(r"#([^ ]*)",)
 
-def split_no_ties_records(boxscore_team_record,boxscore_opponent_record):
-    team_split_parts=boxscore_team_record.replace("(","").replace(")","").split('-')
-    opponent_split_parts=boxscore_opponent_record.replace("(","").replace(")","").split('-')
+def remove_conference_and_no_ties_records(boxscore_team_record,boxscore_opponent_record):
+    team_split_parts=boxscore_team_record.replace("(", "").replace(")", "")
+    opponent_split_parts=boxscore_opponent_record.replace("(", "").replace(")", "")
+    team_record_comma_index=team_split_parts.find(',')
+    opponent_record_comma_index=opponent_split_parts.find(',')
+    if team_record_comma_index != -1:
+        team_split_parts=team_split_parts[:team_record_comma_index]
+    if opponent_record_comma_index != -1:
+        opponent_split_parts=opponent_split_parts[:opponent_record_comma_index]
+    team_split_parts=team_split_parts.split('-')
+    opponent_split_parts=opponent_split_parts.split('-')
     if len(team_split_parts)==3 and int(team_split_parts[-1])==0:
         team_split_parts.pop()
     if len(opponent_split_parts)==3 and int(opponent_split_parts[-1])==0:
@@ -71,7 +79,7 @@ def get_boxscore_records(sport_url):
         boxscore_page=requests.get("{}{}".format(url,href_link)).text
         boxscore_soup=BeautifulSoup(boxscore_page,"html.parser")
         # Retreive the matchup info using the two () substrings on the boxscore page
-        boxscore_matchup=re.search(r'.*(\(.*?\)).*(\(.*?\))',boxscore_soup.get_text()).group(0).strip()
+        boxscore_matchup=re.search(r'.*(\(.*?\)).*(\(.*?\))',boxscore_soup.get_text()).group(0).replace('#', '').strip()
         boxscore_records=re.findall(r'(\(.*?\))',boxscore_matchup)
         logging.info("Boxscore matchup: {}".format(boxscore_matchup))
         # Retrieve team order from boxscore and split according
@@ -79,12 +87,7 @@ def get_boxscore_records(sport_url):
             boxscore_team_record,boxscore_opponent_record=boxscore_records[0],boxscore_records[1]    
         else: 
             boxscore_team_record,boxscore_opponent_record=boxscore_records[1],boxscore_records[0]
-        # Retrieve only the overall records if any additional exist
-        if " " or "," in boxscore_team_record:
-            boxscore_team_record="({})".format(re.findall(r"\d+-\d+-\d+",boxscore_team_record)[0])
-        if " " or "," in boxscore_opponent_record:
-            boxscore_opponent_record="({})".format(re.findall(r"\d+-\d+-\d+",boxscore_opponent_record)[0])
-        boxscore_team_record,boxscore_opponent_record=split_no_ties_records(boxscore_team_record,boxscore_opponent_record)
+        boxscore_team_record,boxscore_opponent_record=remove_conference_and_no_ties_records(boxscore_team_record,boxscore_opponent_record)
         logging.info("Team record: {} Opponent record: {}".format(boxscore_team_record,boxscore_opponent_record))
         return boxscore_team_record,boxscore_opponent_record
     except Exception as e:

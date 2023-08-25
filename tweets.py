@@ -101,4 +101,5 @@ def main():
     tweet_seasonal_sports()
     logging.info("Ending Did Tech Die Twitter bot\n")
 
-main()
+create_tweets("womens-volleyball")
+#main()
