@@ -68,7 +68,7 @@ def set_tweet(url,sport,opponent,result):
         else:
             pos_neg="Yes."
         tweet_text="{}\n{} {} {} {} at the {} {}.\n{}".format(pos_neg,team_sport,team,team_score,opponent,reg_notes,add_notes)
-    tweet=tweet_text.replace(" .", ".")
+    tweet=tweet_text.replace("  "," ").replace(" .", ".")
     return tweet
 
 def get_incorrect_tweet(sport, date, time, opponent, home_away, result):
