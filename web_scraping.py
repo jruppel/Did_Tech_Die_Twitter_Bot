@@ -49,8 +49,8 @@ def get_team_rankings(boxscore_matchup):
         re.search(r"#([^ ]*)",)
 
 def remove_conference_and_no_ties_records(boxscore_team_record,boxscore_opponent_record):
-    team_split_parts=boxscore_team_record.replace("(", "").replace(")", "")
-    opponent_split_parts=boxscore_opponent_record.replace("(", "").replace(")", "")
+    team_split_parts=boxscore_team_record.replace("(", "").replace(")", "").replace(" ","")
+    opponent_split_parts=boxscore_opponent_record.replace("(", "").replace(")", "").replace(" ","")
     team_record_comma_index=team_split_parts.find(',')
     opponent_record_comma_index=opponent_split_parts.find(',')
     if team_record_comma_index != -1:
