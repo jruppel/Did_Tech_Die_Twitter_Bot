@@ -29,7 +29,7 @@ def get_website_data(url,sport):
         recent_games=df[df.Date.isin([current_date,yesterday_date])].where(pd.notnull(df),None)
     except AttributeError:
         logging.warning("Current year schedule for this sport has not been created yet!")
-        return
+        return 
     else:
         if recent_games.empty:
             logging.info("Tech did not play recently in this sport!")
@@ -91,5 +91,5 @@ def get_boxscore_records(sport_url):
         logging.info("Team record: {} Opponent record: {}".format(boxscore_team_record,boxscore_opponent_record))
         return boxscore_team_record,boxscore_opponent_record
     except Exception as e:
-        logging.warning("No boxscore found! Exception occured: {}! Continuing with no boxscore...".format(e))
-        return "",""
+        logging.warning("No boxscore found! Exception occured: {}!".format(e))
+        return None,None
