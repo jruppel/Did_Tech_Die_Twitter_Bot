@@ -22,11 +22,10 @@ def is_game_final(result):
     return final
 
 def result_to_score(sport, result):
+    reg_notes = add_notes = ""
     if sport in {'Baseball', 'Womens-soccer', 'Softball', 'Womens-volleyball', 'Football', 'Mens-basketball', 'Womens-basketball', 'Womens-tennis'}:
         win_loss = result[0]
         score = result[4:]
-        reg_notes = ""
-        add_notes = ""
         if " " in score:
             split_score = score.split(" ", 1)
             score = split_score[0]

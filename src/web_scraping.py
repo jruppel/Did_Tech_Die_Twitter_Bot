@@ -67,14 +67,14 @@ def remove_conference_and_no_ties_records(boxscore_team_record,boxscore_opponent
     opponent_result=f"({'-'.join(opponent_split_parts)})"
     return team_result,opponent_result
 
-def get_boxscore_records(sport_url):
+def get_boxscore_records(sport_url,game_num):
     #Doing a catch-all try-except for now since some boxscore pages or team records may not exist 
     try:
         # Open and parse the schedule page
         sport_page=urllib.request.urlopen(sport_url)
         sport_soup=BeautifulSoup(sport_page,"html.parser")
         # Retrieve the last a tag which has the text Box Score's href attribute value
-        href_link=sport_soup.find_all('a',text='Box Score')[-1]['href']
+        href_link=sport_soup.find_all('a',text='Box Score')[-game_num]['href']
         # Open and parse the boxscore page
         boxscore_page=requests.get("{}{}".format(url,href_link)).text
         boxscore_soup=BeautifulSoup(boxscore_page,"html.parser")
