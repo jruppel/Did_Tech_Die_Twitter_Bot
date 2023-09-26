@@ -36,7 +36,7 @@ def get_website_data(url,sport):
             return   
         tech_games=recent_games[~recent_games.Opponent.str.contains("vs.")]
         game_info=tech_games[['Date','Time','Opponent','At','Result']]
-        game_info.insert(0,'Sport',sport.capitalize())
+        game_info.insert(0,'Sport',sport)
         games=game_info.values.tolist()
         logging.info("Tech played recently in this sport!")
         logging.debug(games)
