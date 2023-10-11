@@ -23,19 +23,24 @@ def get_sport_url(sport):
     sport_url='{}/sports/{}/schedule/{}?grid=true'.format(url,sport,url_year)
     return sport_url
 
-def get_website_data(url,sport):
+def get_website_data(sport_url,sport):
     try:
-        df=pd.read_html(url,header=0)[0]
-        recent_games=df[df.Date.isin([current_date,yesterday_date])].where(pd.notnull(df),None)
+        df=pd.read_html(sport_url,header=0,extract_links='body')[0]
+        df['Date']=df['Date'].apply(lambda x:x[0])
+        df['Time']=df['Time'].apply(lambda x:x[0])
+        df['Opponent']=df['Opponent'].apply(lambda x:x[0])
+        df['At']=df['At'].apply(lambda x:x[0])
+        df['Result']=df['Result'].apply(lambda x:x[0])
+        df['Links']=df['Links'].apply(lambda x:x[1])
+        tech_games=df[df.Date.isin([current_date,yesterday_date])]
     except AttributeError:
         logging.warning("Current year schedule for this sport has not been created yet!")
         return 
     else:
-        if recent_games.empty:
+        if tech_games.empty:
             logging.info("Tech did not play recently in this sport!")
-            return   
-        tech_games=recent_games[~recent_games.Opponent.str.contains("vs.")]
-        game_info=tech_games[['Date','Time','Opponent','At','Result']]
+            return None
+        game_info=tech_games[['Date','Time','Opponent','At','Result', 'Links']]
         game_info.insert(0,'Sport',sport)
         games=game_info.values.tolist()
         logging.info("Tech played recently in this sport!")
@@ -67,16 +72,10 @@ def remove_conference_and_no_ties_records(boxscore_team_record,boxscore_opponent
     opponent_result=f"({'-'.join(opponent_split_parts)})"
     return team_result,opponent_result
 
-def get_boxscore_records(sport_url,game_num):
+def scrape_boxscore_records(boxscore_link):
     #Doing a catch-all try-except for now since some boxscore pages or team records may not exist 
     try:
-        # Open and parse the schedule page
-        sport_page=urllib.request.urlopen(sport_url)
-        sport_soup=BeautifulSoup(sport_page,"html.parser")
-        # Retrieve the last a tag which has the text Box Score's href attribute value
-        href_link=sport_soup.find_all('a',text='Box Score')[-game_num]['href']
-        # Open and parse the boxscore page
-        boxscore_page=requests.get("{}{}".format(url,href_link)).text
+        boxscore_page=requests.get("{}{}".format(url,boxscore_link)).text
         boxscore_soup=BeautifulSoup(boxscore_page,"html.parser")
         # Retreive the matchup info using the two () substrings on the boxscore page
         boxscore_matchup=re.search(r'.*(\(.*?\)).*(\(.*?\))',boxscore_soup.get_text()).group(0).replace('#', '').strip()
@@ -93,3 +92,5 @@ def get_boxscore_records(sport_url,game_num):
     except Exception as e:
         logging.warning("No boxscore found! Exception occured: {}!".format(e))
         return None,None
+    
+#get_website_data('https://latechsports.com/sports/womens-volleyball/schedule/2023?grid=true','womens-volleyball')

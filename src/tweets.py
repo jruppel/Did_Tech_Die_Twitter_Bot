@@ -13,15 +13,26 @@ def manage_tweets(sport):
     logging.info("Checking for recent {} games...".format(sport))
     games=web_scraping.get_website_data(sport_url,sport)
     if games is None:
-        return None
-    game_num=len(games)
-    for game in range(game_num):
+        return
+    for game in range(len(games)):
         delay
-        team_sport,date,time,opponent,home_away,result,team_record,opponent_record,incorrect_tweet_id=game_info.get_team_sport(games[game][0]),games[game][1],game_info.nan_time_to_time(games[game][2]),games[game][3],games[game][4],games[game][5],None,None,None
-        game_is_exhibiton,game_is_final,is_duplicate=game_info.is_game_exhibition(opponent),game_info.is_game_final(result),manage_db.is_game_in_db(sport,date,time,opponent,home_away,result)
-        if game_is_exhibiton or not game_is_final or is_duplicate:
-            return None
-        win_loss,team_score,opponent_score,separator,reg_notes,add_notes,team_record,opponent_record=get_tweet_values(sport,sport_url,game_num,result)
+        opponent=games[game][3]
+        game_is_exhibiton=game_info.is_game_exhibition(opponent)
+        if game_is_exhibiton:
+            continue
+        result=games[game][5]
+        game_is_final=game_info.is_game_final(result)
+        if not game_is_final:
+            continue
+        team_sport,date,time,at,links=game_info.get_team_sport(games[game][0]),games[game][1],game_info.nan_time_to_time(games[game][2]),games[game][4],games[game][6]
+        game_has_boxscore=game_info.does_game_have_boxscore(sport,links)
+        if not game_has_boxscore:
+            continue
+        team_record,opponent_record=get_records(sport,links)
+        is_duplicate=manage_db.is_game_in_db(sport,date,time,opponent,at,team_record,opponent_record,result)
+        if is_duplicate:
+            continue
+        win_loss,team_score,opponent_score,separator,reg_notes,add_notes=get_score_values(sport,result)
         new_tweet=set_tweet(team_sport,opponent,win_loss,team_score,opponent_score,separator,reg_notes,add_notes,team_record,opponent_record)
         response=client.create_tweet(text=new_tweet)
         new_tweet_id=response.data['id']
@@ -31,27 +42,29 @@ def manage_tweets(sport):
         text_alerts.send_text(message)
         logging.info("Inserting new game data in game db...")
         manage_db.insert_new_game_data(
-            sport,date,time,opponent,home_away,result,new_tweet_id
+            sport,date,time,opponent,at,result,team_record,opponent_record,new_tweet_id
             )
-        manage_db.delete_old_game_data()
-        incorrect_tweet_id=get_incorrect_tweet(
-            sport,date,time,opponent,home_away,result
+        incorrect_tweet_id=get_incorrect_tweet_id(
+            sport,date,time,opponent,at,result,team_record,opponent_record
             )
         if incorrect_tweet_id is not None:
             delete_incorrect_tweet(incorrect_tweet_id)
             manage_db.delete_incorrect_game_data(
-            sport,date,time,opponent,home_away,result,incorrect_tweet_id
+            incorrect_tweet_id
             )
-        game_num-=1
+        #game_num-=1
 
-def get_tweet_values(sport,sport_url,game_num,result):
-    win_loss,team_score,opponent_score,reg_notes,add_notes=game_info.result_to_score(sport,result)
-    separator=get_separator(win_loss)
+def get_records(sport,links):
     if sport in boxscore_sports:
-        team_record,opponent_record=web_scraping.get_boxscore_records(sport_url,game_num)
+        team_record,opponent_record=web_scraping.scrape_boxscore_records(links)
     else:
         team_record=opponent_record=None
-    return win_loss,team_score,opponent_score,separator,reg_notes,add_notes,team_record,opponent_record
+    return team_record,opponent_record
+
+def get_score_values(sport,result):
+    win_loss,team_score,opponent_score,reg_notes,add_notes=game_info.result_to_score(sport,result)
+    separator=get_separator(win_loss)
+    return win_loss,team_score,opponent_score,separator,reg_notes,add_notes
 
 def delete_incorrect_tweet(tweet_id):
     client.delete_tweet(tweet_id)
@@ -81,17 +94,22 @@ def set_tweet(team_sport,opponent,win_loss,team_score,opponent_score,separator,r
     tweet=tweet_text.replace("  "," ").replace(" .", ".")
     return tweet
 
-def get_incorrect_tweet(sport,date,time,opponent,home_away,result):
-    game_data=manage_db.get_game_data(sport,date,time,opponent,home_away,result)
-    row_count=len(game_data)-1
-    tweet_id=None
-    if result==None:
-        logging.info("Number of tweets with incorrect result: {}".format(row_count))
-    if opponent==None:
-        logging.info("Number of tweets with incorrect opponent: {}".format(row_count))
-    if row_count>=1:
-        tweet_id=game_data[0][6]
-    return tweet_id
+def get_incorrect_tweet_id(sport,date,time,opponent,at,result,team_record,opponent_record):
+    if sport in boxscore_sports:
+        gd_no_team_record=manage_db.get_game_data(sport,date,time,opponent,at,result,None,opponent_record,None)
+        gd_no_opponent_record=manage_db.get_game_data(sport,date,time,opponent,at,result,team_record,None,None)
+        if len(gd_no_team_record)>1:
+            return gd_no_team_record[0][8]
+        elif len(gd_no_opponent_record)>1:
+            return gd_no_opponent_record[0][8]
+    gd_no_opponent=manage_db.get_game_data(sport,date,time,None,at,result,team_record,opponent_record,None)
+    gd_no_result=manage_db.get_game_data(sport,date,time,opponent,at,None,team_record,opponent_record,None)
+    if len(gd_no_opponent)>1:
+        return gd_no_opponent_record[0][8]
+    elif len(gd_no_result)>1: 
+        return gd_no_result[0][8]
+    else:
+        return None
 
 def tweet_seasonal_sports():
     if season=='winter':
@@ -109,6 +127,9 @@ def tweet_seasonal_sports():
 def main():
     logging.info("Starting Did Tech Die Twitter bot")
     tweet_seasonal_sports()
+    manage_db.delete_old_game_data()
     logging.info("Ending Did Tech Die Twitter bot\n")
 
 main()
+#manage_tweets('womens-volleyball')
+#print(get_incorrect_tweet_id('football','September 23, 2023 (Saturday)','2:40 PM','Nebraska','Away','W,  14-28','(2-3)','(2-2)'))

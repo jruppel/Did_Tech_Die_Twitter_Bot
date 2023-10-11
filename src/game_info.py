@@ -21,7 +21,20 @@ def is_game_final(result):
         logging.info("This Tech game is not final!\nResult: {}".format(result))
     return final
 
-def result_to_score(sport, result):
+def does_game_have_boxscore(sport,links):
+    if sport in no_boxscore_sports:
+        boxscore=True
+        logging.info("No boxscore needed!")
+    elif sport in boxscore_sports and "boxscore" in links:
+        boxscore=True
+        logging.info("This Tech game has a boxscore!")
+    else:
+        boxscore=False
+        logging.info("This Tech game should have, but does not have a boxscore!\nLinks: {}".format(links))
+    return boxscore
+
+
+def result_to_score(sport,result):
     reg_notes=add_notes=""
     if sport in boxscore_sports:
         win_loss=result[0]
