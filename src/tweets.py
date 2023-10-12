@@ -131,5 +131,3 @@ def main():
     logging.info("Ending Did Tech Die Twitter bot\n")
 
 main()
-#manage_tweets('womens-volleyball')
-#print(get_incorrect_tweet_id('football','September 23, 2023 (Saturday)','2:40 PM','Nebraska','Away','W,  14-28','(2-3)','(2-2)'))

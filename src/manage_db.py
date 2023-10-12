@@ -51,6 +51,3 @@ def delete_old_game_data():
     #Delete old game data
     engine.execute(db.delete(games).where(db.or_(games.columns.time!=yesterday_date,games.columns.time!=current_date)))
     logging.info("Old game data deleted!")
-
-#'football','September 23, 2023 (Saturday)','2:40 PM','Nebraska','Away','W,  14-28','(2-3)','(2-2)','1707109512891556289'
-#get_game_data('football','September 23, 2023 (Saturday)','2:40 PM','Nebraska','Away',None,'(2-3)','(2-2)',None)

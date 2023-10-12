@@ -92,5 +92,3 @@ def scrape_boxscore_records(boxscore_link):
     except Exception as e:
         logging.warning("No boxscore found! Exception occured: {}!".format(e))
         return None,None
-    
-#get_website_data('https://latechsports.com/sports/womens-volleyball/schedule/2023?grid=true','womens-volleyball')
