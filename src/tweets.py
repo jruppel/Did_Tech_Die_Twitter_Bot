@@ -128,6 +128,7 @@ def main():
     logging.info("Starting Did Tech Die Twitter bot")
     tweet_seasonal_sports()
     manage_db.delete_old_game_data()
+    logging.info("Current game data:{}".format(manage_db.get_all_game_data()))
     logging.info("Ending Did Tech Die Twitter bot\n")
 
 main()

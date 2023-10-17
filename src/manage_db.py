@@ -49,5 +49,4 @@ def delete_incorrect_game_data(gd_id):
 
 def delete_old_game_data():
     #Delete old game data
-    engine.execute(db.delete(games).where(db.or_(games.columns.time!=yesterday_date,games.columns.time!=current_date)))
-    logging.info("Old game data deleted!")
+    engine.execute('''DELETE FROM games WHERE date NOT IN ('{}','{}')'''.format(yesterday_date,current_date))
