@@ -1,4 +1,5 @@
 # Game Info
+import re
 import constants
 
 logging,boxscore_sports,no_boxscore_sports=constants.logging,constants.boxscore_sports,constants.no_boxscore_sports
@@ -57,11 +58,8 @@ def result_to_score(sport,result):
         if sport in {'womens-bowling','mens-golf'}:
             tech_score=result
         if sport in {'mens-track-and-field','womens-track-and-field','mens-cross-country','womens-cross-country'}:
-            results=result.split(';')
-            if sport in {'mens-track-and-field','mens-cross-country'}:
-                tech_score=results[0].split(" ")[1]
-            if sport in {'womens-track-and-field','womens-cross-country'}:
-                tech_score=results[1].split(" ")[2]
+            results = re.split('[;:]', result)
+            tech_score=results[0].split(" ")[1] if sport in {'mens-track-and-field','mens-cross-country'} else results[1].split(" ")[2]
     return win_loss,tech_score,opponent_score,reg_notes,add_notes
 
 def nan_time_to_time(time):
