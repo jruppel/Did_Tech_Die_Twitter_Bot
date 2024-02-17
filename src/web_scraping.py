@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import constants
 import requests
 
-year,last_year,next_year,today,yesterday_date,current_date,url,team,team_abbr,logging=constants.year,constants.last_year,constants.next_year,constants.today,constants.yesterday_date,constants.current_date,constants.url,constants.team,constants.team_abbr,constants.logging
+year,last_year,next_year,today,yesterday_date,current_date,url,team,team_abbr,team_caps,logging=constants.year,constants.last_year,constants.next_year,constants.today,constants.yesterday_date,constants.current_date,constants.url,constants.team,constants.team_abbr,constants.team_caps,constants.logging
 
 def get_sport_url(sport):
     if sport in {'mens-basketball','womens-basketball','womens-tennis','womens-bowling','mens-golf'}:
@@ -97,7 +97,7 @@ def scrape_boxscore_records(boxscore_link):
         boxscore_records=re.findall(r'(\(.*?\))',boxscore_matchup)
         logging.info("Boxscore record: {}".format(boxscore_records))
         # Retrieve team order from boxscore and split according
-        if (team in boxscore_matchup and boxscore_matchup.index(team)==0) or (team_abbr in boxscore_matchup and boxscore_matchup.index(team_abbr)==0):
+        if (team in boxscore_matchup and boxscore_matchup.index(team)==0) or (team_abbr in boxscore_matchup and boxscore_matchup.index(team_abbr)==0) or (team_caps in boxscore_matchup and boxscore_matchup.index(team_caps)==0):
             boxscore_team_record,boxscore_opponent_record=boxscore_records[0],boxscore_records[1]    
         else: 
             boxscore_team_record,boxscore_opponent_record=boxscore_records[1],boxscore_records[0]
