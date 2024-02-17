@@ -6,7 +6,7 @@ import web_scraping
 import game_info
 import manage_db
 
-logging,client,delay,team,season,winter_sports,spring_sports,summer_sports,autumn_sports,boxscore_sports=constants.logging,constants.client,constants.delay,constants.team,constants.season,constants.winter_sports,constants.spring_sports,constants.summer_sports,constants.autumn_sports,constants.boxscore_sports
+logging,client,delay,team,seasonal_sports,boxscore_sports,no_boxscore_sports=constants.logging,constants.client,constants.delay,constants.team,constants.seasonal_sports,constants.boxscore_sports,constants.no_boxscore_sports
 
 def manage_tweets(sport):
     sport_url=web_scraping.get_sport_url(sport)
@@ -52,7 +52,6 @@ def manage_tweets(sport):
             manage_db.delete_incorrect_game_data(
             incorrect_tweet_id
             )
-        #game_num-=1
 
 def get_records(sport,links):
     if sport in boxscore_sports:
@@ -111,22 +110,10 @@ def get_incorrect_tweet_id(sport,date,time,opponent,at,result,team_record,oppone
     else:
         return None
 
-def tweet_seasonal_sports():
-    if season=='winter':
-        for sport in winter_sports:
-            manage_tweets(sport)
-    elif season=='spring':
-        for sport in spring_sports:
-            manage_tweets(sport)
-    elif season=='summer':
-        for sport in summer_sports:
-            manage_tweets(sport)
-    elif season=='autumn':
-        for sport in autumn_sports:
-            manage_tweets(sport)
 def main():
     logging.info("Starting Did Tech Die Twitter bot")
-    tweet_seasonal_sports()
+    for sport in seasonal_sports:
+        manage_tweets(sport)
     manage_db.delete_old_game_data()
     logging.info("Current game data:{}".format(manage_db.get_all_game_data()))
     logging.info("Ending Did Tech Die Twitter bot\n")

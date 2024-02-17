@@ -53,9 +53,7 @@ def get_team_rankings(boxscore_matchup):
     if "#" in boxscore_matchup:
         re.search(r"#([^ ]*)",)
 
-def remove_conference_and_no_ties_records(boxscore_team_record,boxscore_opponent_record):
-    team_split_parts=boxscore_team_record.replace("(", "").replace(")", "").replace(" ,",",").replace(", ",",")
-    opponent_split_parts=boxscore_opponent_record.replace("(", "").replace(")", "").replace(" ,",",").replace(", ",",")
+def split_record_parts(team_split_parts):
     if team_split_parts.count(",")==1:
         team_record_comma_index=team_split_parts.find(',')
         if team_split_parts[:team_record_comma_index].find("-")==-1:
@@ -66,24 +64,20 @@ def remove_conference_and_no_ties_records(boxscore_team_record,boxscore_opponent
         first_team_record_comma_index=team_split_parts.find(',')
         second_team_record_comma_index=team_split_parts.find(',',team_split_parts.find(',')+1)
         team_split_parts=team_split_parts[first_team_record_comma_index+1:second_team_record_comma_index]
-    if opponent_split_parts.count(",")==1:
-        opponent_record_comma_index=opponent_split_parts.find(',')
-        if opponent_split_parts[:opponent_record_comma_index].find("-")==-1:
-            opponent_split_parts=opponent_split_parts[opponent_record_comma_index+1:]
-        else:
-            opponent_split_parts=opponent_split_parts[:opponent_record_comma_index]
-    elif opponent_split_parts.count(",")==2:
-        first_opponent_record_comma_index=opponent_split_parts.find(',')
-        second_opponent_record_comma_index=opponent_split_parts.find(',',opponent_split_parts.find(',')+1)
-        opponent_split_parts=opponent_split_parts[first_opponent_record_comma_index+1:second_opponent_record_comma_index]
     team_split_parts=team_split_parts.split('-')
-    opponent_split_parts=opponent_split_parts.split('-')
+    return team_split_parts
+
+def remove_no_ties_records(team_split_parts):
     if len(team_split_parts)==3 and int(team_split_parts[-1])==0:
         team_split_parts.pop()
-    if len(opponent_split_parts)==3 and int(opponent_split_parts[-1])==0:
-        opponent_split_parts.pop()
-    team_result=f"({'-'.join(team_split_parts)})"
-    opponent_result=f"({'-'.join(opponent_split_parts)})"
+    return team_split_parts
+
+def remove_unnecessary_characters_from_record(boxscore_team_record):
+    return boxscore_team_record.replace("(", "").replace(")", "").replace(" ","")
+
+def get_overall_records_only(boxscore_team_record,boxscore_opponent_record):
+    team_result=f"({'-'.join(remove_no_ties_records(split_record_parts(remove_unnecessary_characters_from_record(boxscore_team_record))))})"
+    opponent_result=f"({'-'.join(remove_no_ties_records(split_record_parts(remove_unnecessary_characters_from_record(boxscore_opponent_record))))})"
     return team_result,opponent_result
 
 def scrape_boxscore_records(boxscore_link):
@@ -95,16 +89,17 @@ def scrape_boxscore_records(boxscore_link):
         boxscore_matchup=re.search(r'.*(\(.*?\)).*(\(.*?\))',boxscore_soup.get_text()).group(0).replace('#', '').strip()
         logging.info("Boxscore matchup: {}".format(boxscore_matchup))
         boxscore_records=re.findall(r'(\(.*?\))',boxscore_matchup)
-        logging.info("Boxscore record: {}".format(boxscore_records))
+        logging.info("Boxscore records: {}".format(boxscore_records))
         # Retrieve team order from boxscore and split according
         if (team in boxscore_matchup and boxscore_matchup.index(team)==0) or (team_abbr in boxscore_matchup and boxscore_matchup.index(team_abbr)==0):
             boxscore_team_record,boxscore_opponent_record=boxscore_records[0],boxscore_records[1]    
         else: 
             boxscore_team_record,boxscore_opponent_record=boxscore_records[1],boxscore_records[0]
-        boxscore_team_record,boxscore_opponent_record=remove_conference_and_no_ties_records(boxscore_team_record,boxscore_opponent_record)
+        boxscore_team_record,boxscore_opponent_record=get_overall_records_only(boxscore_team_record,boxscore_opponent_record)
         logging.info("Team record: {} Opponent record: {}".format(boxscore_team_record,boxscore_opponent_record))
         return boxscore_team_record,boxscore_opponent_record
     except Exception as e:
         logging.warning("No boxscore found! Exception occured: {}!".format(e))
         return None,None
     
+#scrape_boxscore_records('/sports/womens-tennis/stats/2023-24/lsu/boxscore/12369')
