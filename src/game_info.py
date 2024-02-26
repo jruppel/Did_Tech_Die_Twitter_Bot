@@ -34,6 +34,13 @@ def does_game_have_boxscore(sport,links):
         logging.info("This Tech game should have, but does not have a boxscore!\nLinks: {}".format(links))
     return boxscore
 
+def does_game_have_valid_records(team_record,opponent_record):
+    if team_record in {'','()'} or opponent_record in {'','()'}:
+        valid_records=False
+        logging.info("This Tech games should have, but does not have records!\n")
+    else:
+        valid_records=True
+    return valid_records
 
 def result_to_score(sport,result):
     reg_notes=add_notes=""
