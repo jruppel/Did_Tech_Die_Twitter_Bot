@@ -1,6 +1,7 @@
 constants.py
+constants-example.py
 new-constants.py
 __pycache__/
-venv/
+.venv/
 gamedata.db
 bot.log
