@@ -29,9 +29,7 @@ def manage_tweets(sport):
         if not game_has_boxscore:
             continue
         team_record,opponent_record=get_records(sport,links)
-        game_has_valid_records=game_info.does_game_have_valid_records(team_record,opponent_record)
-        if not game_has_valid_records:
-            continue
+        team_record,opponent_record=game_info.remove_blank_records_from_boxscore(team_record,opponent_record)
         is_duplicate=manage_db.is_game_in_db(sport,date,time,opponent,at,team_record,opponent_record,result)
         if is_duplicate:
             continue
