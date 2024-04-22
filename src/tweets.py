@@ -16,7 +16,7 @@ def manage_tweets(sport):
         return
     for game in range(len(games)):
         delay
-        opponent=games[game][3]
+        opponent=game_info.remove_dh_from_opponent(games[game][3]) 
         game_is_exhibiton=game_info.is_game_exhibition(opponent)
         if game_is_exhibiton:
             continue
