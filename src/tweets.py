@@ -6,7 +6,7 @@ import web_scraping
 import game_info
 import manage_db
 
-logging,client,delay,team,seasonal_sports,boxscore_sports,no_boxscore_sports=constants.logging,constants.client,constants.delay,constants.team,constants.seasonal_sports,constants.boxscore_sports,constants.no_boxscore_sports
+logging,client,delay,team,season,winter_sports,spring_sports,summer_sports,autumn_sports,boxscore_sports=constants.logging,constants.client,constants.delay,constants.team,constants.season,constants.winter_sports,constants.spring_sports,constants.summer_sports,constants.autumn_sports,constants.boxscore_sports
 
 def manage_tweets(sport):
     sport_url=web_scraping.get_sport_url(sport)
@@ -16,7 +16,7 @@ def manage_tweets(sport):
         return
     for game in range(len(games)):
         delay
-        opponent=games[game][3]
+        opponent=game_info.remove_dh_from_opponent(games[game][3]) 
         game_is_exhibiton=game_info.is_game_exhibition(opponent)
         if game_is_exhibiton:
             continue
@@ -29,6 +29,7 @@ def manage_tweets(sport):
         if not game_has_boxscore:
             continue
         team_record,opponent_record=get_records(sport,links)
+        team_record,opponent_record=game_info.remove_blank_records_from_boxscore(team_record,opponent_record)
         is_duplicate=manage_db.is_game_in_db(sport,date,time,opponent,at,team_record,opponent_record,result)
         if is_duplicate:
             continue
@@ -80,16 +81,16 @@ def get_separator(win_loss):
 def set_tweet(team_sport,opponent,win_loss,team_score,opponent_score,separator,reg_notes,add_notes,team_record,opponent_record):
     if [x for x in (win_loss,team_record,opponent_record) if x is not None]:
         if win_loss=='W' or win_loss=='T':
-            pos_neg,win_team_record,win_team,lose_team_record,lose_team,win_score,lose_score="No.",team_record,team,opponent_record,opponent,team_score,opponent_score
+            pos_neg,win_team_record,win_team,lose_team_record,lose_team,win_score,lose_score="No.",team_record,tweet_team,opponent_record,opponent,team_score,opponent_score
         if win_loss=='L':
-            pos_neg,win_team_record,win_team,lose_team_record,lose_team,win_score,lose_score="Yes.",opponent_record,opponent,team_record,team,opponent_score,team_score
+            pos_neg,win_team_record,win_team,lose_team_record,lose_team,win_score,lose_score="Yes.",opponent_record,opponent,team_record,tweet_team,opponent_score,team_score
         tweet_text="{}\n{} {} {} {} {} {} {} to {} {}.\n{}".format(pos_neg,team_sport,win_team_record,win_team,separator,lose_team_record,lose_team,win_score,lose_score,reg_notes,add_notes)
     elif [x for x in (win_loss,team_record,opponent_record) if x is None]:
         if team_score=='1st':
             pos_neg="No."
         else:
             pos_neg="Yes."
-        tweet_text="{}\n{} {} {} {} at the {} {}.\n{}".format(pos_neg,team_sport,team,separator,team_score,opponent,reg_notes,add_notes)
+        tweet_text="{}\n{} {} {} {} at the {} {}.\n{}".format(pos_neg,team_sport,tweet_team,separator,team_score,opponent,reg_notes,add_notes)
     tweet=tweet_text.replace("  "," ").replace(" .", ".")
     return tweet
 
