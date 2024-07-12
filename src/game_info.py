@@ -40,9 +40,9 @@ def does_game_have_boxscore(sport,links):
     return boxscore
 
 def remove_blank_records_from_boxscore(team_record,opponent_record):
-    if team_record in {' ','()',None}:
+    if team_record in {' ','()'}:
         team_record=''
-    if opponent_record in {' ','()',None}:
+    if opponent_record in {' ','()'}:
         opponent_record=''
     return team_record,opponent_record
 
@@ -77,34 +77,3 @@ def nan_time_to_time(time):
     if time!=time:
         time="None"
     return time
-
-def get_team_sport(sport):
-    if sport=='football':
-        team_sport="🏈:"
-    elif sport=='mens-basketball':
-        team_sport="Men's 🏀:"
-    elif sport=='womens-basketball':
-        team_sport="Women's 🏀:"
-    elif sport=="baseball":
-        team_sport="⚾:"
-    elif sport=="softball":
-        team_sport="🥎:"
-    elif sport=="womens-soccer":
-        team_sport="⚽:"
-    elif sport=='womens-volleyball':
-        team_sport="🏐:"
-    elif sport=='womens-tennis':
-        team_sport="🎾:"
-    elif sport=='mens-golf':
-        team_sport="⛳:"
-    elif sport=="womens-bowling":
-        team_sport="🎳:"
-    elif sport=="mens-track-and-field":
-        team_sport="Men's T&F 🏃:"
-    elif sport=="womens-track-and-field":
-        team_sport="Women's T&F 🏃:"
-    elif sport=="mens-cross-country":
-        team_sport="Men's XC 🏃:"
-    elif sport=="womens-cross-country":
-        team_sport="Women's XC 🏃:"
-    return team_sport

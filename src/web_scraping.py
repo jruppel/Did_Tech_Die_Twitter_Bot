@@ -24,28 +24,27 @@ def get_sport_url(sport):
     return sport_url
 
 def get_website_data(sport_url,sport):
-    try:
-        df=pd.read_html(sport_url,header=0,extract_links='body')[0]
-        df['Date']=df['Date'].apply(lambda x:x[0])
-        df['Time']=df['Time'].apply(lambda x:x[0])
-        df['Opponent']=df['Opponent'].apply(lambda x:x[0])
-        df['At']=df['At'].apply(lambda x:x[0])
-        df['Result']=df['Result'].apply(lambda x:x[0])
-        df['Links']=df['Links'].apply(lambda x:x[1])
-        tech_games=df[df.Date.isin([current_date,yesterday_date])]
-    except AttributeError:
-        logging.warning("Current year schedule for this sport has not been created yet!")
-        return 
-    else:
-        if tech_games.empty:
-            logging.info("Tech did not play recently in this sport!")
-            return None
-        game_info=tech_games[['Date','Time','Opponent','At','Result', 'Links']]
-        game_info.insert(0,'Sport',sport)
-        games=game_info.values.tolist()
-        logging.info("Tech played recently in this sport!")
-        logging.debug(games)
-        return games
+    df=pd.read_html(sport_url,header=0,extract_links='body')[0]
+    for col in ['Date','Time','Opponent','At','Result','Links']:
+        if col not in df.columns:
+            logging.warning("{} does not exist on the {} sport grid. Skipping this sport.".format(col,sport_url))
+            return 
+    df['Date']=df['Date'].apply(lambda x:x[0])
+    df['Time']=df['Time'].apply(lambda x:x[0])
+    df['Opponent']=df['Opponent'].apply(lambda x:x[0])
+    df['At']=df['At'].apply(lambda x:x[0])
+    df['Result']=df['Result'].apply(lambda x:x[0])
+    df['Links']=df['Links'].apply(lambda x:x[1])
+    tech_games=df[df.Date.isin([current_date,yesterday_date])]
+    if tech_games.empty:
+        logging.info("Tech did not play recently in this sport!")
+        return None
+    game_info=tech_games[['Date','Time','Opponent','At','Result', 'Links']]
+    game_info.insert(0,'Sport',sport)
+    games=game_info.values.tolist()
+    logging.info("Tech played recently in this sport!")
+    logging.debug(games)
+    return games
 
 def get_team_rankings(boxscore_matchup):
     team_ranking=""

@@ -1,17 +1,16 @@
 # Tweets
 import re
-import constants
+import constants as c
 import text_alerts
 import web_scraping
 import game_info
 import manage_db
 
-logging,client,delay,tweet_team,season,winter_sports,spring_sports,summer_sports,autumn_sports,boxscore_sports=constants.logging,constants.client,constants.delay,constants.tweet_team,constants.season,constants.winter_sports,constants.spring_sports,constants.summer_sports,constants.autumn_sports,constants.boxscore_sports
+logging,client,delay,tweet_team,seasonal_sports,boxscore_sports=c.logging,c.client,c.delay,c.tweet_team,c.seasonal_sports,c.boxscore_sports
 
 def manage_tweets(sport):
-    sport_url=web_scraping.get_sport_url(sport)
     logging.info("Checking for recent {} games...".format(sport))
-    games=web_scraping.get_website_data(sport_url,sport)
+    games=web_scraping.get_website_data(seasonal_sports[sport]["url"],sport)
     if games is None:
         return
     for game in range(len(games)):
@@ -24,7 +23,7 @@ def manage_tweets(sport):
         game_is_final=game_info.is_game_final(result)
         if not game_is_final:
             continue
-        team_sport,date,time,at,links=game_info.get_team_sport(games[game][0]),games[game][1],game_info.nan_time_to_time(games[game][2]),games[game][4],games[game][6]
+        date,time,at,links=games[game][1],game_info.nan_time_to_time(games[game][2]),games[game][4],games[game][6]
         game_has_boxscore=game_info.does_game_have_boxscore(sport,links)
         if not game_has_boxscore:
             continue
@@ -34,7 +33,7 @@ def manage_tweets(sport):
         if is_duplicate:
             continue
         win_loss,team_score,opponent_score,separator,reg_notes,add_notes=get_score_values(sport,result)
-        new_tweet=set_tweet(team_sport,opponent,win_loss,team_score,opponent_score,separator,reg_notes,add_notes,team_record,opponent_record)
+        new_tweet=set_tweet(seasonal_sports[sport]["emoji"],opponent,win_loss,team_score,opponent_score,separator,reg_notes,add_notes,team_record,opponent_record)
         response=client.create_tweet(text=new_tweet)
         new_tweet_id=response.data['id']
         tweet_url=f"https://twitter.com/user/status/{new_tweet_id}"
@@ -112,22 +111,10 @@ def get_incorrect_tweet_id(sport,date,time,opponent,at,result,team_record,oppone
     else:
         return None
 
-def tweet_seasonal_sports():
-    if season=='winter':
-        for sport in winter_sports:
-            manage_tweets(sport)
-    elif season=='spring':
-        for sport in spring_sports:
-            manage_tweets(sport)
-    elif season=='summer':
-        for sport in summer_sports:
-            manage_tweets(sport)
-    elif season=='autumn':
-        for sport in autumn_sports:
-            manage_tweets(sport)
 def main():
     logging.info("Starting Did Tech Die Twitter bot")
-    tweet_seasonal_sports()
+    for sport in seasonal_sports:
+        manage_tweets(sport)
     manage_db.delete_old_game_data()
     logging.info("Current game data:{}".format(manage_db.get_all_game_data()))
     logging.info("Ending Did Tech Die Twitter bot\n")
