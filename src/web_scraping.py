@@ -29,19 +29,29 @@ def get_website_data(sport_url,sport):
         if col not in df.columns:
             logging.warning("{} does not exist on the {} sport grid. Skipping this sport.".format(col,sport_url))
             return 
-    df['Date']=df['Date'].apply(lambda x:x[0])
-    df['Time']=df['Time'].apply(lambda x:x[0])
-    df['Opponent']=df['Opponent'].apply(lambda x:x[0])
-    df['At']=df['At'].apply(lambda x:x[0])
-    df['Result']=df['Result'].apply(lambda x:x[0])
-    df['Links']=df['Links'].apply(lambda x:x[1])
-    tech_games=df[df.Date.isin([current_date,yesterday_date])]
+    df['Date']=df['Date'].apply(lambda x:x[0] if isinstance(x,tuple) else x)
+    df['Time']=df['Time'].apply(lambda x:x[0] if isinstance(x,tuple) else x)
+    df['Opponent']=df['Opponent'].apply(lambda x:x[0] if isinstance(x,tuple) else x)
+    df['At']=df['At'].apply(lambda x:x[0] if isinstance(x,tuple) else x)
+    df['Result'] = df['Result'].apply(lambda x: x[0] if isinstance(x,tuple) else x)
+    df['Links'] = df['Links'].apply(lambda x: x[1] if isinstance(x,tuple) else x)
+    # Add game number column
+    df.insert(0,'Game #',range(1,len(df)+1))
+    # Handle the 'Tournament' column only if it's bowling
+    if sport=="womens-bowling":
+        if 'Tournament' in df.columns:  # Check if 'Tournament' column exists
+            df['Tournament']=df['Tournament'].apply(lambda x:x[0] if isinstance(x,tuple) else x)
+        df=df[['Game #','Date','Time','Opponent','At','Result','Links','Tournament']]
+    else:
+        df=df[['Game #','Date','Time','Opponent','At','Result','Links']]
+        df['Tournament']=None
+    # Filter for recent games
+    tech_games=df[df.Date.isin([current_date, yesterday_date])]
     if tech_games.empty:
         logging.info("Tech did not play recently in this sport!")
         return None
-    game_info=tech_games[['Date','Time','Opponent','At','Result', 'Links']]
-    game_info.insert(0,'Sport',sport)
-    games=game_info.values.tolist()
+    # Convert to list
+    games=tech_games.values.tolist()
     logging.info("Tech played recently in this sport!")
     logging.debug(games)
     return games
@@ -52,7 +62,7 @@ def get_team_rankings(boxscore_matchup):
     if "#" in boxscore_matchup:
         re.search(r"#([^ ]*)",)
 
-def remove_conference_and_no_ties_records(boxscore_team_record,boxscore_opponent_record):
+def get_valid_records(boxscore_team_record,boxscore_opponent_record):
     team_split_parts=boxscore_team_record.replace("(", "").replace(")", "").replace(" ,",",").replace(", ",",")
     opponent_split_parts=boxscore_opponent_record.replace("(", "").replace(")", "").replace(" ,",",").replace(", ",",")
     if team_split_parts.count(",")==1:
@@ -83,6 +93,10 @@ def remove_conference_and_no_ties_records(boxscore_team_record,boxscore_opponent
         opponent_split_parts.pop()
     team_result=f"({'-'.join(team_split_parts)})"
     opponent_result=f"({'-'.join(opponent_split_parts)})"
+    if team_result in {' ','()'}:
+        team_result=''
+    if opponent_result in {' ','()'}:
+        opponent_result=''
     return team_result,opponent_result
 
 def scrape_boxscore_records(boxscore_link):
@@ -100,10 +114,9 @@ def scrape_boxscore_records(boxscore_link):
             boxscore_team_record,boxscore_opponent_record=boxscore_records[0],boxscore_records[1]    
         else: 
             boxscore_team_record,boxscore_opponent_record=boxscore_records[1],boxscore_records[0]
-        boxscore_team_record,boxscore_opponent_record=remove_conference_and_no_ties_records(boxscore_team_record,boxscore_opponent_record)
+        boxscore_team_record,boxscore_opponent_record=get_valid_records(boxscore_team_record,boxscore_opponent_record)
         logging.info("Team record: {} Opponent record: {}".format(boxscore_team_record,boxscore_opponent_record))
         return boxscore_team_record,boxscore_opponent_record
     except Exception as e:
         logging.warning("No boxscore found! Exception occured: {}!".format(e))
-        return None,None
-    
+        return "",""

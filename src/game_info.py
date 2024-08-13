@@ -48,7 +48,20 @@ def remove_blank_records_from_boxscore(team_record,opponent_record):
 
 def result_to_score(sport,result):
     reg_notes=add_notes=""
-    if sport in boxscore_sports:
+    win_loss_tie=["W","L","T"]
+    win_loss=None
+    if result[0].isdigit():
+        #Retain only the resulting place
+        result=result.partition(" ")[0]
+        win_loss=opponent_score=None
+        if sport in {'womens-bowling','mens-golf'}:
+            tech_score=result
+        #For these sports, there is one page for both T&F and cross country
+        #So I split the results and return only the result the specific sport. Later, the other sport will be returned as well
+        if sport in {'mens-track-and-field','womens-track-and-field','mens-cross-country','womens-cross-country'}:
+            results = re.split('[;:]', result)
+            tech_score=results[0].split(" ")[1] if sport in {'mens-track-and-field','mens-cross-country'} else results[1].split(" ")[2]
+    elif any(match in result for match in win_loss_tie):
         win_loss=result[0]
         score=result[4:]
         if " " in score:
@@ -64,13 +77,6 @@ def result_to_score(sport,result):
         opponent_score=int(score.split("-")[1])
         if (win_loss=='W' and opponent_score>=tech_score) or (win_loss=='L' and opponent_score<=tech_score):
                 opponent_score,tech_score=tech_score,opponent_score
-    elif sport in no_boxscore_sports:
-        win_loss=opponent_score=None
-        if sport in {'womens-bowling','mens-golf'}:
-            tech_score=result
-        if sport in {'mens-track-and-field','womens-track-and-field','mens-cross-country','womens-cross-country'}:
-            results = re.split('[;:]', result)
-            tech_score=results[0].split(" ")[1] if sport in {'mens-track-and-field','mens-cross-country'} else results[1].split(" ")[2]
     return win_loss,tech_score,opponent_score,reg_notes,add_notes
 
 def nan_time_to_time(time):
