@@ -5,3 +5,7 @@ __pycache__/
 .venv/
 gamedata.db
 bot.log
+test_twitter_accounts.py
+test_university_twitter_handler.py
+schools.csv
+sorted_schools.csv

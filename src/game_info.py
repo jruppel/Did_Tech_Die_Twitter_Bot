@@ -11,7 +11,7 @@ def remove_dh_from_opponent(opponent):
 
 def is_game_exhibition(opponent):
     exhibition=False
-    if "(exhibition)" in opponent:
+    if "exhibition" in opponent.lower():
         exhibition=True
         logging.info("This Tech game is an exhibition; no tweet needed!")
     else:
