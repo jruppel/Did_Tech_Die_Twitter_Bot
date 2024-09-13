@@ -7,21 +7,7 @@ from bs4 import BeautifulSoup
 import constants
 import requests
 
-year,last_year,next_year,today,yesterday_date,current_date,url,boxscore_teams,logging=constants.year,constants.last_year,constants.next_year,constants.today,constants.yesterday_date,constants.current_date,constants.url,constants.boxscore_teams,constants.logging
-
-def get_sport_url(sport):
-    if sport in {'mens-basketball','womens-basketball','womens-tennis','womens-bowling','mens-golf'}:
-        if date(year,1,1)<=today<=date(year,6,20):
-            url_year=str(last_year)+"-"+str(year)[2:]
-        if date(year,6,21)<=today<=date(year,12,31):    
-            url_year=str(year)+"-"+str(next_year)[2:]
-    if sport in {'baseball','womens-soccer','softball','womens-volleyball','football','womens-cross-country',
-                 'mens-cross-country','womens-track-and-field','mens-track-and-field'}:
-        url_year=year
-        if sport in {'womens-cross-country','mens-cross-country','womens-track-and-field','mens-track-and-field'}:
-            sport=sport.split("-", 1)[1]
-    sport_url='{}/sports/{}/schedule/{}?grid=true'.format(url,sport,url_year)
-    return sport_url
+two_days_ago_date,yesterday_date,current_date,boxscore_teams,logging=constants.two_days_ago_date,constants.yesterday_date,constants.current_date,constants.boxscore_teams,constants.logging
 
 def get_website_data(sport_url,sport):
     df=pd.read_html(sport_url,header=0,extract_links='body')[0]
@@ -46,7 +32,7 @@ def get_website_data(sport_url,sport):
         df=df[['Game #','Date','Time','Opponent','At','Result','Links']]
         df['Tournament']=None
     # Filter for recent games
-    tech_games=df[df.Date.isin([current_date, yesterday_date])]
+    tech_games=df[df.Date.isin([current_date, yesterday_date, two_days_ago_date])]
     if tech_games.empty:
         logging.info("Tech did not play recently in this sport!")
         return None
