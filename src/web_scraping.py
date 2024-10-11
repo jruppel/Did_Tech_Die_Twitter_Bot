@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import constants
 import requests
 
-two_days_ago_date,yesterday_date,current_date,boxscore_teams,logging=constants.two_days_ago_date,constants.yesterday_date,constants.current_date,constants.boxscore_teams,constants.logging
+two_days_ago_date,yesterday_date,current_date,boxscore_teams,logging,url=constants.two_days_ago_date,constants.yesterday_date,constants.current_date,constants.boxscore_teams,constants.logging,constants.url
 
 def get_website_data(sport_url,sport):
     df=pd.read_html(sport_url,header=0,extract_links='body')[0]
