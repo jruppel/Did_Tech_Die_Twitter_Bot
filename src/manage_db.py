@@ -2,7 +2,7 @@
 import constants
 import sqlalchemy as db
 
-sql_db,logging,yesterday_date,current_date=constants.sql_db,constants.logging,constants.yesterday_date,constants.current_date
+sql_db,logging,two_days_ago_date,yesterday_date,current_date=constants.sql_db,constants.logging,constants.two_days_ago_date,constants.yesterday_date,constants.current_date
 
 engine=db.create_engine(sql_db)
 connection=engine.connect()
@@ -50,4 +50,4 @@ def delete_incorrect_game_data(gd_id):
 
 def delete_old_game_data():
     #Delete old game data
-    engine.execute('''DELETE FROM games WHERE date NOT IN ('{}','{}')'''.format(yesterday_date,current_date))
+    engine.execute('''DELETE FROM games WHERE date NOT IN ('{}','{}','{}')'''.format(two_days_ago_date,yesterday_date,current_date))

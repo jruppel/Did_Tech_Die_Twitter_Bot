@@ -11,7 +11,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
 
-api_key,search_engine_id=constants.custom_search_key,constants.search_engine_id
 year,last_year,next_year,today,yesterday_date,current_date,url,boxscore_teams,logging=constants.year,constants.last_year,constants.next_year,constants.today,constants.yesterday_date,constants.current_date,constants.url,constants.boxscore_teams,constants.logging
 
 def get_sport_url(sport):
@@ -51,7 +50,7 @@ def get_website_data(sport_url,sport):
         df=df[['Game #','Date','Time','Opponent','At','Result','Links']]
         df['Tournament']=None
     # Filter for recent games
-    tech_games=df[df.Date.isin([current_date, yesterday_date])]
+    tech_games=df[df.Date.isin([current_date, yesterday_date, two_days_ago_date])]
     if tech_games.empty:
         logging.info("Tech did not play recently in this sport!")
         return None
@@ -125,41 +124,3 @@ def scrape_boxscore_records(boxscore_link):
     except Exception as e:
         logging.warning("No boxscore found! Exception occured: {}!".format(e))
         return "",""
-
-def get_opponent_handle(opponent,sport):
-# Make a request to the API
-    query = f"{opponent} {sport} twitter"
-    url = f"https://www.googleapis.com/customsearch/v1"
-    params = {"key": api_key, "cx": search_engine_id, "q": query}
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        data = response.json()
-        if "items" in data and len(data["items"]) > 0:
-            first_result = data["items"][0]
-            opponent_handle=first_result["title"].split("(")[1].split(")")[0]  # Return the first Twitter link found
-    else:
-        opponent_handle=opponent
-        print("Opponent handle not found. Reverting to opponent name for tweet.")
-    return opponent_handle
-
-
-'''def get_opponent_handle(sport,opponent):
-    # Set up the browser
-    driver=webdriver.Chrome()
-    search_query=f"{opponent} {sport} site:x.com"
-    driver.get("https://www.google.com")
-    search_box=driver.find_element(By.NAME, "q")
-    search_box.send_keys(search_query)
-    search_box.send_keys(Keys.RETURN)
-    time.sleep(3)  # Allow results to load
-    # Scrape the first result
-    try:
-        result=driver.find_element(By.CSS_SELECTOR, "h3").text
-        opponent_handle=result.split("(")[1].split(")")[0]
-    except Exception as e:
-        opponent_handle=""
-    driver.quit()
-    print(opponent_handle)
-    return opponent_handle
-
-get_opponent_handle("bowling","Florida A&M")'''
