@@ -11,7 +11,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
 
-year,last_year,next_year,today,yesterday_date,current_date,url,boxscore_teams,logging=constants.year,constants.last_year,constants.next_year,constants.today,constants.yesterday_date,constants.current_date,constants.url,constants.boxscore_teams,constants.logging
+year,last_year,next_year,today,yesterday_date,two_days_ago_date,current_date,url,boxscore_teams,logging=constants.year,constants.last_year,constants.next_year,constants.today,constants.yesterday_date,constants.two_days_ago_date,constants.current_date,constants.url,constants.boxscore_teams,constants.logging
 
 def get_sport_url(sport):
     if sport in {'mens-basketball','womens-basketball','womens-tennis','womens-bowling','mens-golf'}:
