@@ -1,7 +1,7 @@
 # Tweets
 import re
 import constants as c
-import text_alerts
+import tweet_alerts
 import web_scraping
 import game_info
 import manage_db
@@ -41,7 +41,7 @@ def manage_tweets(sport):
         tweet_url=f"https://twitter.com/user/status/{new_tweet_id}"
         message="Link:\n{}\nTweet:\n{}".format(tweet_url,new_tweet)
         logging.info(message)
-        text_alerts.send_text(message)
+        tweet_alerts.send_tweet_notification(tweet_url,new_tweet)
         logging.info("Inserting new game data in game db...")
         manage_db.insert_new_game_data(
             game_num,sport,date,time,opponent,at,result,team_record,opponent_record,new_tweet_id
