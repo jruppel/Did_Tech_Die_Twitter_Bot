@@ -20,7 +20,7 @@ def is_game_exhibition(opponent):
 
 def is_game_final(result):
     final=False
-    if not result!=result and result not in {None,'Canceled','Postponed',''}:
+    if not result!=result and result not in {None,'Canceled','Cancelled','Postponed',''}:
         final=True
         logging.info("This Tech game is final!")
     else:
