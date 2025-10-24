@@ -4,9 +4,13 @@ import constants
 
 logging,boxscore_sports,no_boxscore_sports=constants.logging,constants.boxscore_sports,constants.no_boxscore_sports
 
-def remove_dh_from_opponent(opponent):
+def remove_extra_chars_from_opponent(opponent):
     if '(DH)' in opponent:
-        opponent,*_ = opponent.partition('(DH)') 
+        opponent,*_ = opponent.partition('(DH)')
+    if '*' in opponent:
+        opponent,*_ = opponent.partition('*')
+    if ' ' in opponent:
+        opponent=opponent.strip()
     return opponent
 
 def is_game_exhibition(opponent):
