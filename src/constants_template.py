@@ -58,11 +58,9 @@ client=tweepy.Client(bearer_token=credentials['bearer_token'],consumer_key=crede
 # Tweet delay
 delay=tm.sleep(random.randint(3, 15))
 
-#Gmail info for texting
-smtp_provider=""
-recipient=""
-email=""
-password=""
+#Ntfy info for alerts
+ntfy_url="https://ntfy.sh/"
+ntfy_tweet_alerts_topic=""
 
 # Date/time info
 today=date.today()
