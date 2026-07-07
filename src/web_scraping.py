@@ -8,7 +8,7 @@ import constants
 import requests
 
 two_days_ago_date,yesterday_date,current_date,boxscore_teams,logging,url=constants.two_days_ago_date,constants.yesterday_date,constants.current_date,constants.boxscore_teams,constants.logging,constants.url
-
+"""
 def get_website_data(sport_url,sport):
     df=pd.read_html(sport_url,header=0,extract_links='body')[0]
     for col in ['Date','Time','Opponent','At','Result','Links']:
@@ -40,6 +40,132 @@ def get_website_data(sport_url,sport):
     games=tech_games.values.tolist()
     logging.info("Tech played recently in this sport!")
     logging.debug(games)
+    return games
+"""
+
+def get_website_data(sport_url, sport):
+    headers = {
+        "User-Agent": "Mozilla/5.0",
+        "tenant": "latech"
+    }
+
+    r = requests.get(sport_url, headers=headers)
+
+    if r.status_code != 200:
+        logging.warning(f"Unable to load {sport_url}")
+        return None
+
+    soup = BeautifulSoup(r.text, "html.parser")
+
+    events = soup.find_all("article", class_="c-events__item-inner")
+
+    if not events:
+        logging.warning(f"No events found for {sport}")
+        return None
+
+    games = []
+
+    for game_number, event in enumerate(events, start=1):
+        text = event.find("h3", class_="sr-only").get_text(" ", strip=True)
+
+        # Game status
+        if text.startswith("Upcoming Event"):
+            status = "Upcoming"
+        elif text.startswith("Completed Event"):
+            status = "Completed"
+        else:
+            status = None
+
+        # Opponent
+        opponent_match = re.search(r"Football (?:versus|at) (.*?) on", text)
+        opponent = opponent_match.group(1) if opponent_match else None
+
+        # Home/Away
+        location = "Home" if "versus" in text else "Away"
+
+        # Date
+        date_match = re.search(
+            r"on\s+([A-Za-z]+\s+\d{1,2},\s+\d{4})",
+            text
+        )
+        date = date_match.group(1) if date_match else None
+
+        # Time
+        if status == "Upcoming":
+            time_match = re.search(
+                r"at (\d+:\d+ [ap]\.m\.)",
+                text
+            )
+            time = time_match.group(1) if time_match else "TBA"
+        else:
+            time = None
+
+        # Result
+        result_match = re.search(
+            r"(Win|Loss).*?(\d+), to, (\d+)",
+            text
+        )
+
+        if result_match:
+            result = (
+                f"{result_match.group(1)} "
+                f"{result_match.group(2)}-{result_match.group(3)}"
+            )
+        else:
+            result = None
+
+        games.append([
+            game_number,
+            date,
+            time,
+            opponent,
+            location,
+            result,
+            None,       # Links placeholder
+            None        # Tournament placeholder
+        ])
+
+    df = pd.DataFrame(
+        games,
+        columns=[
+            "Game #",
+            "Date",
+            "Time",
+            "Opponent",
+            "At",
+            "Result",
+            "Links",
+            "Tournament"
+        ]
+    )
+
+    # Convert date for filtering
+    df["Date"] = pd.to_datetime(
+        df["Date"],
+        format="mixed",
+        errors="coerce"
+    )
+
+    # Filter recent games
+    tech_games = df[
+        df["Date"].isin(
+            [
+                current_date,
+                yesterday_date,
+                two_days_ago_date
+            ]
+        )
+    ]
+
+    if tech_games.empty:
+        logging.info("Tech did not play recently in this sport!")
+        return None
+
+    games = tech_games.values.tolist()
+
+    logging.info("Tech played recently in this sport!")
+    logging.debug(games)
+
     return games
 
 def get_team_rankings(boxscore_matchup):
