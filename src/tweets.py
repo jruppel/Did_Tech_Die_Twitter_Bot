@@ -1,58 +1,106 @@
 # Tweets
 import re
-import constants as c
+from datetime import datetime
+import constants
 import tweet_alerts
 import web_scraping
 import game_info
 import manage_db
 
-logging,client,delay,tweet_team,seasonal_sports,boxscore_sports=c.logging,c.client,c.delay,c.tweet_team,c.seasonal_sports,c.boxscore_sports
+logging=constants.logging
+client=constants.client
+delay=constants.delay
+tweet_team=constants.tweet_team
+seasonal_sports=constants.seasonal_sports
+boxscore_sports=constants.boxscore_sports
+tech_ids=constants.tech_ids
+tech_names=constants.tech_names
 
 def manage_tweets(sport):
+    sport_id=seasonal_sports[sport]["sport_id"]
+    sport_year=seasonal_sports[sport]["year"]
     logging.info("Checking for recent {} games...".format(sport))
-    games=web_scraping.get_website_data(seasonal_sports[sport]["url"],sport)
-    if games is None:
+    recent_games=web_scraping.get_sport_schedule_recent_games(sport_id,sport_year)
+    if recent_games is None:
         return
-    for game in range(len(games)):
+    for game in recent_games:
         delay
-        opponent=game_info.remove_extra_chars_from_opponent(games[game][3]) 
-        game_is_exhibiton=game_info.is_game_exhibition(opponent)
-        if game_is_exhibiton:
+        result=game["result"]
+        if result is None:
             continue
-        result=games[game][5]
-        game_is_final=game_info.is_game_final(result)
-        if not game_is_final:
+        schedule_opponent=game_info.remove_extra_chars_from_opponent(game["opponent"]["title"])
+        if game_info.is_game_exhibition(schedule_opponent):
             continue
-        game_num,date,time,at,links,tournament=games[game][0],games[game][1],game_info.nan_time_to_time(games[game][2]),games[game][4],games[game][6],games[game][7]
-        game_has_boxscore=game_info.does_game_have_boxscore(sport,links)
-        if not game_has_boxscore:
+        game_id=game["id"]
+        game_date=datetime.fromisoformat(game["date"]).date()
+        time=game_info.nan_time_to_time(game["time"])
+        at=game["atVs"]
+        tournament=(
+            game["tournament"]["title"]
+            if game["tournament"] is not None
+            else None
+        )
+        notes=result["postscoreInfo"]
+        results_data=web_scraping.get_results_data(sport_id,game_id)
+        if results_data is None:
             continue
-        team_record,opponent_record=get_records(sport,links)
-        team_record,opponent_record=game_info.remove_blank_records_from_boxscore(team_record,opponent_record)
-        is_duplicate=manage_db.is_game_in_db(game_num,sport,date,time,opponent,at,team_record,opponent_record,result)
-        if is_duplicate:
-            continue
-        win_loss,team_score,opponent_score,separator,reg_notes,add_notes=get_score_values(sport,result)
-        new_tweet=set_tweet(seasonal_sports[sport]["emoji"],opponent,win_loss,team_score,opponent_score,separator,reg_notes,add_notes,team_record,opponent_record,tournament)
-        response=client.create_tweet(text=new_tweet)
-        new_tweet_id=response.data['id']
-        tweet_url=f"https://twitter.com/user/status/{new_tweet_id}"
-        message="Link:\n{}\nTweet:\n{}".format(tweet_url,new_tweet)
-        logging.info(message)
-        tweet_alerts.send_tweet_notification(tweet_url,new_tweet)
-        logging.info("Inserting new game data in game db...")
-        manage_db.insert_new_game_data(
-            game_num,sport,date,time,opponent,at,result,team_record,opponent_record,new_tweet_id
-            )
-        incorrect_tweet_id=get_incorrect_tweet_id(
-            game_num,sport,date,time
-            )
-        if incorrect_tweet_id is not None:
-            client.delete_tweet(incorrect_tweet_id)
-            manage_db.delete_incorrect_game_data(
-            incorrect_tweet_id
-            )
-
+        win_loss=results_data["resultStatus"]
+        separator=get_separator(win_loss)
+        boxscore=results_data["boxscore"]
+        if boxscore is not None:
+            home=boxscore["home"]
+            away=boxscore["away"]
+            if home["id"] in constants.tech_ids or home["name"] in constants.tech_names:
+                tech_team=home
+                opponent_team=away
+            else:
+                tech_team=away
+                opponent_team=home
+            opponent_name=opponent_team["name"]    
+            tech_score=int(tech_team["score"])
+            opponent_score=int(opponent_team["score"])
+            tech_record=game_info.get_overall_record(tech_team["record"])
+            opponent_record=game_info.get_overall_record(opponent_team["record"])
+        else:
+            opponent_name=game["opponent"]["title"]
+            tech_score=result["postscoreInfo"]
+            opponent_score=""
+            tech_record=""
+            opponent_record=""
+            if tech_score=="":
+                continue
+            if sport in {'womens-bowling','mens-golf'}:
+                continue
+            #For these sports, there is one page for both T&F and cross country
+            # #So I split the results and return only the result the specific sport. Later, the other sport will be returned as well
+            if sport in {'mens-track-and-field','womens-track-and-field','mens-cross-country','womens-cross-country'}:
+                parts=[part.strip() for part in tech_score.split(";")]
+                index = 0 if sport in {"mens-track-and-field", "mens-cross-country"} else 1
+                tech_score = parts[index].split()[1]      
+        #is_duplicate=manage_db.is_game_in_db(game_id,sport,game_date,time,opponent,at,team_record,opponent_record,result)
+        #if is_duplicate:
+        #    continue
+        #win_loss,team_score,opponent_score,separator,reg_notes,add_notes=get_score_values(sport,result)
+        new_tweet=set_tweet(seasonal_sports[sport]["emoji"],opponent_name,win_loss,tech_score,opponent_score,separator,notes,tech_record,opponent_record,tournament)
+        print(new_tweet)
+        #response=client.create_tweet(text=new_tweet)
+        #new_tweet_id=response.data['id']
+        #tweet_url=f"https://twitter.com/user/status/{new_tweet_id}"
+        #message="Link:\n{}\nTweet:\n{}".format(tweet_url,new_tweet)
+        #logging.info(message)
+        #tweet_alerts.send_tweet_notification(tweet_url,new_tweet)
+        #logging.info("Inserting new game data in game db...")
+        #manage_db.insert_new_game_data(
+        #    game_num,sport,date,time,opponent,at,result,team_record,opponent_record,new_tweet_id
+        #    )
+        #incorrect_tweet_id=get_incorrect_tweet_id(
+        #    game_num,sport,date,time
+        #    )
+        #if incorrect_tweet_id is not None:
+        #    client.delete_tweet(incorrect_tweet_id)
+        #    manage_db.delete_incorrect_game_data(
+        #    incorrect_tweet_id
+        #    )
 def get_records(sport,links):
     if sport in boxscore_sports:
         team_record,opponent_record=web_scraping.scrape_boxscore_records(links)
@@ -70,26 +118,32 @@ def get_separator(win_loss):
         separator="defeats"
     elif win_loss=='T':
         separator="ties"
-    elif win_loss==None:
+    elif win_loss=='N':
         separator="finished"
     return separator
 
-def set_tweet(team_sport,opponent,win_loss,team_score,opponent_score,separator,reg_notes,add_notes,team_record,opponent_record,tournament):
-    if win_loss is not None:
-        if win_loss=='W' or win_loss=='T':
-            pos_neg,win_team_record,win_team,lose_team_record,lose_team,win_score,lose_score="No.",team_record,tweet_team,opponent_record,opponent,team_score,opponent_score
-        if win_loss=='L':
-            pos_neg,win_team_record,win_team,lose_team_record,lose_team,win_score,lose_score="Yes.",opponent_record,opponent,team_record,tweet_team,opponent_score,team_score
-        tweet_text="{}\n{}: {} {} {} {} {} {} to {} {}.\n{}".format(pos_neg,team_sport,win_team_record,win_team,separator,lose_team_record,lose_team,win_score,lose_score,reg_notes,add_notes)
-    elif win_loss is None :
-        if team_score=='1st':
-            pos_neg="No."
-        else:
-            pos_neg="Yes."
-        if tournament is not None:
-            tweet_text="{}\n{}: {} {} {} at the {} {}.\n{}".format(pos_neg,team_sport,tweet_team,separator,team_score,tournament,reg_notes,add_notes)
-        else:
-            tweet_text="{}\n{}: {} {} {} at the {} {}.\n{}".format(pos_neg,team_sport,tweet_team,separator,team_score,opponent,reg_notes,add_notes)
+def set_tweet(team_sport,opponent,win_loss,tech_score,opponent_score,separator,notes,tech_record,opponent_record,tournament):
+    if win_loss=='W' or win_loss=='T':
+        did_tech_die="No."
+        win_team_record=tech_record
+        win_team=tweet_team
+        lose_team_record=opponent_record
+        lose_team=opponent
+        win_score=tech_score
+        lose_score=opponent_score
+        tweet_text="{}\n{}: {} {} {} {} {} {} to {} {}.".format(did_tech_die,team_sport,win_team_record,win_team,separator,lose_team_record,lose_team,win_score,lose_score,notes)
+    elif win_loss=='L':
+        did_tech_die="Yes."
+        win_team_record=opponent_record
+        win_team=opponent
+        lose_team_record=tech_record
+        lose_team=tweet_team
+        win_score=opponent_score
+        lose_score=tech_score
+        tweet_text="{}\n{}: {} {} {} {} {} {} to {} {}.".format(did_tech_die,team_sport,win_team_record,win_team,separator,lose_team_record,lose_team,win_score,lose_score,notes)
+    else:
+        did_tech_die="N/A."
+        tweet_text="{}\n{}: {} {} {} at the {}.".format(did_tech_die,team_sport,tweet_team,separator,tech_score,opponent)
     tweet=tweet_text.replace("  "," ").replace(" .", ".")
     return tweet
 

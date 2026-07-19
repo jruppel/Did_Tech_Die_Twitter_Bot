@@ -50,6 +50,12 @@ def remove_blank_records_from_boxscore(team_record,opponent_record):
         opponent_record=''
     return team_record,opponent_record
 
+def get_overall_record(record):
+    record=record.split(",")[0].strip()
+    if not record.startswith("("):
+        record="({})".format(record)
+    return record
+
 def result_to_score(sport,result):
     reg_notes=add_notes=""
     win_loss_tie=["W","L","T"]
