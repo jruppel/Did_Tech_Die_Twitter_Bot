@@ -51,7 +51,11 @@ def remove_blank_records_from_boxscore(team_record,opponent_record):
     return team_record,opponent_record
 
 def get_overall_record(record):
+    # get only the overall record
     record=record.split(",")[0].strip()
+    # only one "-" in the record string
+    record=re.sub(r"-+","-",record)
+    # check if record string starts with "(" already
     if not record.startswith("("):
         record="({})".format(record)
     return record

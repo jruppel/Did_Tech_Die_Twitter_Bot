@@ -5,7 +5,7 @@ import constants
 import tweet_alerts
 import web_scraping
 import game_info
-import manage_db
+import database
 
 logging=constants.logging
 client=constants.client
@@ -37,7 +37,7 @@ def manage_tweets(sport):
         at=game["atVs"]
         tournament=(
             game["tournament"]["title"]
-            if game["tournament"] is not None
+            if game["tournament"]
             else None
         )
         notes=result["postscoreInfo"]
@@ -50,7 +50,7 @@ def manage_tweets(sport):
         if boxscore is not None:
             home=boxscore["home"]
             away=boxscore["away"]
-            if home["id"] in constants.tech_ids or home["name"] in constants.tech_names:
+            if home["id"] in tech_ids or home["name"] in tech_names:
                 tech_team=home
                 opponent_team=away
             else:
@@ -63,24 +63,28 @@ def manage_tweets(sport):
             opponent_record=game_info.get_overall_record(opponent_team["record"])
         else:
             opponent_name=game["opponent"]["title"]
-            tech_score=result["postscoreInfo"]
-            opponent_score=""
             tech_record=""
             opponent_record=""
-            if tech_score=="":
+            tech_score=(
+                result.get("teamScore")
+                or result.get("postscoreInfo")
+                or result.get("prescoreInfo")
+                or ""
+            )
+            if not tech_score: 
                 continue
-            if sport in {'womens-bowling','mens-golf'}:
-                continue
+            opponent_score = result.get("opponentScore", "")
             #For these sports, there is one page for both T&F and cross country
-            # #So I split the results and return only the result the specific sport. Later, the other sport will be returned as well
-            if sport in {'mens-track-and-field','womens-track-and-field','mens-cross-country','womens-cross-country'}:
+            #So I split the results and return only the result the specific sport. Later, the other sport will be returned as well
+            if sport in constants.TRACK_AND_FIELD_SPORTS:
                 parts=[part.strip() for part in tech_score.split(";")]
                 index = 0 if sport in {"mens-track-and-field", "mens-cross-country"} else 1
-                tech_score = parts[index].split()[1]      
+                tech_score=parts[index].split()[1]      
         #is_duplicate=manage_db.is_game_in_db(game_id,sport,game_date,time,opponent,at,team_record,opponent_record,result)
         #if is_duplicate:
         #    continue
         #win_loss,team_score,opponent_score,separator,reg_notes,add_notes=get_score_values(sport,result)
+        print(repr(tech_score))
         new_tweet=set_tweet(seasonal_sports[sport]["emoji"],opponent_name,win_loss,tech_score,opponent_score,separator,notes,tech_record,opponent_record,tournament)
         print(new_tweet)
         #response=client.create_tweet(text=new_tweet)
@@ -148,7 +152,7 @@ def set_tweet(team_sport,opponent,win_loss,tech_score,opponent_score,separator,n
     return tweet
 
 def get_incorrect_tweet_id(game_num,sport,date,time):
-    incorrect_game_data=manage_db.get_game_data(game_num,sport,date,time,None,None,None,None,None,None)
+    incorrect_game_data=database.get_game_data(game_num,sport,date,time,None,None,None,None,None,None)
     if len(incorrect_game_data)>1:
         return incorrect_game_data[0][9]
     else:
@@ -158,8 +162,8 @@ def main():
     logging.info("Starting Did Tech Die Twitter bot")
     for sport in seasonal_sports:
         manage_tweets(sport)
-    manage_db.delete_old_game_data()
-    logging.info("Current game data:{}".format(manage_db.get_all_game_data()))
+    database.delete_old_game_data()
+    logging.info("Current game data:{}".format(database.get_all_game_data()))
     logging.info("Ending Did Tech Die Twitter bot\n")
 
 main()
