@@ -159,7 +159,7 @@ def get_valid_records(boxscore_team_record,boxscore_opponent_record):
     if opponent_result in {' ','()'}:
         opponent_result=''
     return team_result,opponent_result
-
+'''
 def scrape_boxscore_records(boxscore_link):
     #Doing a catch-all try-except for now since some boxscore pages or team records may not exist 
     try:
@@ -181,3 +181,4 @@ def scrape_boxscore_records(boxscore_link):
     except Exception as e:
         logging.warning("No boxscore found! Exception occured: {}!".format(e))
         return "",""
+'''
