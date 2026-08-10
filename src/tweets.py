@@ -28,8 +28,8 @@ def process_games(sport):
         result=game["result"]
         if result is None:
             continue
-        schedule_opponent=game_info.remove_extra_chars_from_opponent(game["opponent"]["title"])
-        if game_info.is_game_exhibition(schedule_opponent):
+        #schedule_opponent=game_info.remove_extra_chars_from_opponent(game["opponent"]["title"])
+        if game_info.is_game_exhibition(game["gamePromotionText"]):
             continue
         game_id=game["id"]
         game_date=datetime.fromisoformat(game["date"]).date()

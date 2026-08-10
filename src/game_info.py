@@ -13,9 +13,9 @@ def remove_extra_chars_from_opponent(opponent):
         opponent=opponent.strip()
     return opponent
 
-def is_game_exhibition(opponent):
+def is_game_exhibition(promotion_text):
     exhibition=False
-    if "exhibition" in opponent.lower():
+    if promotion_text and "exhibition" in promotion_text.lower():
         exhibition=True
         logging.info("This Tech game is an exhibition; no tweet needed!")
     else:
