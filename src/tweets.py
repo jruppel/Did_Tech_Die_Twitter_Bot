@@ -31,10 +31,11 @@ def process_games(sport):
         #schedule_opponent=game_info.remove_extra_chars_from_opponent(game["opponent"]["title"])
         if game_info.is_game_exhibition(game["gamePromotionText"]):
             continue
-        game_id=game["id"]
+        game_id=str(game["id"])
         game_date=datetime.fromisoformat(game["date"]).date()
         time=game_info.nan_time_to_time(game["time"])
         home_away=game["atVs"]
+        opponent_name=game["opponent"]["title"]
         #tournament=(
         #    game["tournament"]["title"]
         #    if game["tournament"]
@@ -55,14 +56,12 @@ def process_games(sport):
                 opponent_team=away
             else:
                 tech_team=away
-                opponent_team=home
-            opponent_name=opponent_team["name"]    
+                opponent_team=home   
             tech_score=tech_team["score"]
             opponent_score=opponent_team["score"]
             tech_record=game_info.get_overall_record(tech_team["record"])
             opponent_record=game_info.get_overall_record(opponent_team["record"])
         else:
-            opponent_name=game["opponent"]["title"]
             tech_record=""
             opponent_record=""
             tech_score=(
