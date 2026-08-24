@@ -25,7 +25,7 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
           X_CONSUMER_KEY: op://DidTechDie/X Consumer Key/credential
-          X_CONSUMER_SECRET: op://DidTechDie/X Consumer Key Secret/credential
+          X_CONSUMER_SECRET: op://DidTechDie/X Consumer Secret/credential
           X_ACCESS_TOKEN: op://DidTechDie/X Access Token/credential
           X_ACCESS_TOKEN_SECRET: op://DidTechDie/X Access Token Secret/credential
           X_BEARER_TOKEN: op://DidTechDie/X Bearer Token/credential
