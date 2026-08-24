@@ -1,19 +1,43 @@
 name: Did Tech Die
 
 on:
-  schedule:
-    - cron: "7 * * * *"
   workflow_dispatch:
 
+  repository_dispatch:
+    types: [cron-job]
+
 concurrency:
-        group: did-tech-die
-        cancel-in-progress: false
+  group: did-tech-die
+  cancel-in-progress: false
 
 jobs:
   run-bot:
+    name: "Run bot (${{ github.event_name == 'repository_dispatch' && 'cron-job.org' || 'Manual' }})"
     runs-on: ubuntu-latest
 
+    env:
+      DID_TECH_DIE_TESTING: "false"
+
     steps:
+      - name: Identify trigger
+        run: |
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "TRIGGER_SOURCE=cron-job.org" >> "$GITHUB_ENV"
+          else
+            echo "TRIGGER_SOURCE=Manual" >> "$GITHUB_ENV"
+          fi
+
+      - name: Show trigger
+        run: |
+          echo "================================"
+          echo "Did Tech Die trigger"
+          echo "================================"
+          echo "Source: $TRIGGER_SOURCE"
+          echo "Event:  ${{ github.event_name }}"
+          echo "Actor:  ${{ github.actor }}"
+          echo "Run:    ${{ github.run_number }}"
+          echo "================================"
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -30,7 +54,6 @@ jobs:
           X_ACCESS_TOKEN_SECRET: op://DidTechDie/X Access Token Secret/credential
           X_BEARER_TOKEN: op://DidTechDie/X Bearer Token/credential
           NEON_DATABASE_URL: op://DidTechDie/DidTechDie - Neon Database/credential
-          DID_TECH_DIE_TESTING: "false"
 
       - name: Set up Python
         uses: actions/setup-python@v5
