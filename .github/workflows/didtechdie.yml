@@ -1,0 +1,43 @@
+name: Did Tech Die
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+concurrency:
+        group: did-tech-die
+        cancel-in-progress: false
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load secrets from 1Password
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+          X_CONSUMER_KEY: op://DidTechDie/X Consumer Key/credential
+          X_CONSUMER_SECRET: op://DidTechDie/X Consumer Key Secret/credential
+          X_ACCESS_TOKEN: op://DidTechDie/X Access Token/credential
+          X_ACCESS_TOKEN_SECRET: op://DidTechDie/X Access Token Secret/credential
+          X_BEARER_TOKEN: op://DidTechDie/X Bearer Token/credential
+          NEON_DATABASE_URL: op://DidTechDie/DidTechDie - Neon Database/credential
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run bot
+        run: python src/tweets.py
