@@ -1,6 +1,3 @@
-constants.py
-constants-example.py
-new-constants.py
 __pycache__/
 .venv/
 gamedata.db

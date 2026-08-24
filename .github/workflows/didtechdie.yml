@@ -30,6 +30,7 @@ jobs:
           X_ACCESS_TOKEN_SECRET: op://DidTechDie/X Access Token Secret/credential
           X_BEARER_TOKEN: op://DidTechDie/X Bearer Token/credential
           NEON_DATABASE_URL: op://DidTechDie/DidTechDie - Neon Database/credential
+          DID_TECH_DIE_TESTING: "false"
 
       - name: Set up Python
         uses: actions/setup-python@v5

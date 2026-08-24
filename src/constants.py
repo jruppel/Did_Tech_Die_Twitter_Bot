@@ -1,81 +1,54 @@
-from datetime import datetime, date, timedelta
+from datetime import date, timedelta
 import logging
 import tweepy
-import time as tm
-import random
 import os
 
-testing=True
-
-#File path info
-if os.name == "nt":
-    path=""
-else:
-    path=""
+testing = os.getenv("DID_TECH_DIE_TESTING", "false").lower() == "true"
 
 #DB info
-sql_db="sqlite:///{}gamedata.db".format(path)
+sql_db=os.environ["NEON_DATABASE_URL"]
 
-# Logging info
-log='{}bot.log'.format(path)
+#Logging info
 logging.basicConfig(
-     filename=log,
-     level=logging.DEBUG, 
+     level=logging.DEBUG,
      format= '[%(asctime)s] {%(module)s:%(funcName)s:%(lineno)d} %(levelname)s - %(message)s',
      datefmt='%m-%d-%Y %H:%M:%S'
  )
 
 #Main Twitter API
-main_credentials={
-'consumer_key':'',
-'consumer_secret':'',
-'access_token':'',
-'access_token_secret':'',
-'bearer_token':''
+credentials={
+'consumer_key':os.environ["X_CONSUMER_KEY"],
+'consumer_secret':os.environ["X_CONSUMER_SECRET"],
+'access_token':os.environ["X_ACCESS_TOKEN"],
+'access_token_secret':os.environ["X_ACCESS_TOKEN_SECRET"],
+'bearer_token':os.environ["X_BEARER_TOKEN"]
 }
 
-#Testing Twitter API
-testing_credentials={
-'consumer_key':'',
-'consumer_secret':'',
-'access_token':'',
-'access_token_secret':'',
-'bearer_token':''
-}
-
-# Twiter Authentication
-# Set testing account constants
-if testing:
-    credentials=testing_credentials
-# Set main account constants
-else:
-    credentials=main_credentials
-
-client=tweepy.Client(bearer_token=credentials['bearer_token'],consumer_key=credentials['consumer_key'],
+client=tweepy.Client(bearer_token=credentials['bearer_token'],consumer_key=credentials['consumer_key'],  
                     consumer_secret=credentials['consumer_secret'],access_token=credentials['access_token'],
-                    access_token_secret=credentials['access_token_secret'],wait_on_rate_limit=True)
-
-# Tweet delay
-delay=tm.sleep(random.randint(3, 15))
+                    access_token_secret=credentials['access_token_secret'],wait_on_rate_limit=True)      
 
 #Ntfy info for alerts
 ntfy_url="https://ntfy.sh/"
-ntfy_tweet_alerts_topic=""
+ntfy_tweet_alerts_topic="did_tech_die_tweets"
+
+#Headers for requests
+HEADERS = {
+    "tenant": "latech",
+    "User-Agent": "DidTechDieBot/1.0"
+}
 
 # Date/time info
-today=date.today()
-yesterday=today-timedelta(days=1)
-year=today.year
+current_date=date.today()
+yesterday_date=current_date-timedelta(days=1)
+two_days_ago_date=current_date-timedelta(days=2)
+year=current_date.year
 last_year=year-1
 next_year=year+1
-current_date=today.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
-yesterday_date=yesterday.strftime('%B X%d, %Y (%A)').replace('X0','X').replace('X','')
-current_time=datetime.now().strftime('%H:%M')
-if date(year,1,1)<=today<=date(year,6,20):
+if date(year,1,1)<=current_date<=date(year,6,20):
     biannual_year="{}-{}".format(str(last_year),str(year)[2:])
-if date(year,6,21)<=today<=date(year,12,31):
+if date(year,6,21)<=current_date<=date(year,12,31):
     biannual_year="{}-{}".format(str(year),str(next_year)[2:])
-
 # Season info
 Y=2000 # dummy leap year to allow input X-02-29 (leap day)
 seasons=[('winter',(date(Y,1,1),date(Y,3,20))),
@@ -83,100 +56,121 @@ seasons=[('winter',(date(Y,1,1),date(Y,3,20))),
     ('summer',(date(Y,6,21),date(Y,9,22))),
     ('autumn',(date(Y,9,23),date(Y,12,20))),
     ('winter',(date(Y,12,21),date(Y,12,31)))]
-now=today.replace(year=Y)
+now=current_date.replace(year=Y)
 season=next(season for season,(start,end) in seasons if start<=now<=end)
-
 # Sport info
-tweet_team=""
-#boxscore_teams={"", "", "", "", "", ""}
-url=""
+tweet_team="Louisiana Tech"
+tech_ids = {"LTU", "LATech", "TECH"}
+tech_names={"Louisiana Tech","LA Tech","TECH","LA TECH","LOUISIANA TECH","LATECH"}
+url="https://latechsports.com"
 sports={
     "football":{
         "emoji":"🏈",
         "season":["summer","autumn","winter"],
         "boxscore":True,
-        "url":"{}/sports/football/schedule/{}?grid=true".format(url,year),       
+        "sport_id":2,
+        "year":year
         },
     "mens-basketball":{
         "emoji":"Men's 🏀",
         "season":["autumn","winter","spring"],
         "boxscore":True,
-        "url":"{}/sports/mens-basketball/schedule/{}?grid=true".format(url,biannual_year)
+        "sport_id":5,
+        "year":biannual_year
         },
     "womens-basketball":{
         "emoji":"Women's 🏀",
         "season":["autumn","winter","spring"],
         "boxscore":True,
-        "url":"{}/sports/womens-basketball/schedule/{}?grid=true".format(url,biannual_year)
+        "sport_id":10,
+        "year":biannual_year
         },
     "baseball":{
         "emoji":"⚾",
         "season":["winter","spring","summer"],
         "boxscore":True,
-        "url":"{}/sports/baseball/schedule/{}?grid=true".format(url,year)
+        "sport_id":1,
+        "year":year
         },
     "softball":{
         "emoji":"🥎",
         "season":["winter","spring"],
         "boxscore":True,
-        "url":"{}/sports/softball/schedule/{}?grid=true".format(url,biannual_year)
+        "sport_id":9,
+        "year":year
         },
     "womens-soccer":{
         "emoji":"⚽",
         "season":["summer","autumn"],
         "boxscore":True,
-        "url":"{}/sports/womens-soccer/schedule/{}?grid=true".format(url,year)
+        "sport_id":13,
+        "year":year
         },
     "womens-volleyball":{
         "emoji":"🏐",
         "season":["summer","autumn"],
         "boxscore":True,
-        "url":"{}/sports/womens-volleyball/schedule/{}?grid=true".format(url,year)
+        "sport_id":16,
+        "year":year
         },
     "womens-tennis":{
         "emoji":"🎾",
         "season":["autumn","winter","spring"],
         "boxscore":True,
-        "url":"{}/sports/womens-tennis/schedule/{}?grid=true".format(url,biannual_year)
+        "sport_id":14,
+        "year":biannual_year
         },
     "womens-bowling":{
         "emoji":"🎳",
         "season":["autumn","winter","spring"],
         "boxscore":False,
-        "url":"{}/sports/womens-bowling/schedule/{}?grid=true".format(url,biannual_year)
+        "sport_id":11,
+        "year":biannual_year
     },
     "mens-golf":{
         "emoji":"⛳",
         "season":["autumn","winter","spring"],
         "boxscore":False,
-        "url":"{}/sports/mens-golf/schedule/{}?grid=true".format(url,biannual_year)
+        "sport_id":7,
+        "year":biannual_year
     },
     "mens-track-and-field":{
         "emoji":"Men's T&F 🏃",
         "season":["winter","spring"],
         "boxscore":False,
-        "url":"{}/sports/track-and-field/schedule/{}?grid=true".format(url,year)
+        "sport_id":20,
+        "year":year
     },
     "womens-track-and-field":{
         "emoji":"Women's T&F 🏃",
         "season":["winter","spring"],
         "boxscore":False,
-        "url":"{}/sports/track-and-field/schedule/{}?grid=true".format(url,year)
+        "sport_id":20,
+        "year":year
     },
     "mens-cross-country":{
         "emoji":"Men's XC 🏃",
         "season":["summer","autumn"],
         "boxscore":False,
-        "url":"{}/sports/cross-country/schedule/{}?grid=true".format(url,year)
+        "sport_id":19,
+        "year":year
     },
     "womens-cross-country":{
         "emoji":"Women's XC 🏃",
         "season":["summer","autumn"],
         "boxscore":False,
-        "url":"{}/sports/cross-country/schedule/{}?grid=true".format(url,year)
+        "sport_id":19,
+        "year":year
     }
 }
+
+TRACK_AND_FIELD_SPORTS = {
+    "mens-track-and-field",
+    "womens-track-and-field",
+    "mens-cross-country",
+    "womens-cross-country",
+}
+
 seasonal_sports={sport:info for sport,info in sports.items() if season in info["season"]}
 boxscore_sports={sport for sport,info in seasonal_sports.items() if info["boxscore"] is True}
 no_boxscore_sports={sport for sport,info in seasonal_sports.items() if info["boxscore"] is False}
-
