@@ -233,7 +233,6 @@ def main():
     for sport in seasonal_sports:
         process_games(sport)
     #database.delete_old_game_data()
-    logging.info("Current game data:{}".format(db.get_all_game_data()))
     logging.info("Ending Did Tech Die Twitter bot\n")
 
 main()
