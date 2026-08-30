@@ -95,153 +95,77 @@ def process_games(sport):
     updated_count = 0
 
     for game in recent_games:
-        result = game.get("result")
-        if result is None:
-            continue
-
         opponent_name = game.get("opponent", {}).get("title", "")
         if game_info.is_game_exhibition(opponent_name):
             continue
 
-        game_id = str(game["id"])
-        game_date = datetime.fromisoformat(game["date"]).date()
-        time = game_info.nan_time_to_time(game.get("time"))
-        home_away = game.get("atVs", "")
-        notes = result.get("postscoreInfo", "")
-
+        game_id = str(game.get("id", ""))
         results_data = web_scraping.get_results_data(sport_id, game_id)
-        if results_data is None:
+        if not results_data:
             continue
 
-        win_loss = results_data.get("resultStatus", "")
+        game_data = game_info.extract_game_details(game, sport, results_data)
+        if not game_data:
+            logging.info(f"Game {game_id} vs {opponent_name} ({sport}) has no final score yet; skipping.")
+            continue
+
+        win_loss = game_data["result_status"]
         separator = get_separator(win_loss)
-        boxscore = results_data.get("boxscore")
+        post_text = set_post(
+            seasonal_sports[sport]["emoji"],
+            game_data["opponent"],
+            win_loss,
+            game_data["team_score"],
+            game_data["opponent_score"],
+            separator,
+            game_data["notes"],
+            game_data["team_record"],
+            game_data["opponent_record"]
+        )
 
-        if boxscore is not None:
-            home = boxscore.get("home", {})
-            away = boxscore.get("away", {})
-            if home.get("id") in tech_ids or home.get("name") in tech_names:
-                tech_team = home
-                opponent_team = away
-            else:
-                tech_team = away
-                opponent_team = home
-            tech_score = tech_team.get("score", "")
-            opponent_score = opponent_team.get("score", "")
-            tech_record = game_info.get_overall_record(tech_team.get("record", ""))
-            opponent_record = game_info.get_overall_record(opponent_team.get("record", ""))
-        else:
-            tech_record = ""
-            opponent_record = ""
-            tech_score = (
-                result.get("teamScore")
-                or result.get("postscoreInfo")
-                or result.get("prescoreInfo")
-                or ""
-            )
-            if not tech_score:
-                logging.info(f"Game {game_id} vs {opponent_name} ({sport}) has no final score yet; skipping.")
-                continue
-            opponent_score = result.get("opponentScore", "")
-
-            # Track & Field / Cross Country result parsing
-            if sport in constants.TRACK_AND_FIELD_SPORTS:
-                parts = [part.strip() for part in tech_score.split(";")]
-                index = 0 if sport in {"mens-track-and-field", "mens-cross-country"} else 1
-                if len(parts) > index and len(parts[index].split()) > 1:
-                    tech_score = parts[index].split()[1]
-
-        # Single DB lookup in memory
         existing_game = db.get_game_data(game_id)
-
         if existing_game is not None:
-            current_game = {
-                "team_record": tech_record,
-                "team_score": tech_score,
-                "opponent_record": opponent_record,
-                "opponent": opponent_name,
-                "opponent_score": opponent_score,
-                "home_away": home_away,
-                "result_status": win_loss,
-                "notes": notes
-            }
-            if db.has_game_changed(existing_game, current_game):
+            if db.has_game_changed(existing_game, game_data):
                 logging.info(f"Game change detected for {game_id} vs {opponent_name}")
-                corrected_post = set_post(
-                    seasonal_sports[sport]["emoji"],
-                    opponent_name,
-                    win_loss,
-                    tech_score,
-                    opponent_score,
-                    separator,
-                    notes,
-                    tech_record,
-                    opponent_record
-                )
                 if existing_game.post_id:
-                    if replace_post(game_id, corrected_post, old_post_id=existing_game.post_id):
+                    if replace_post(game_id, post_text, old_post_id=existing_game.post_id):
                         logging.info(f"Replacing tweet {existing_game.post_id}")
                         db.increment_correction_count(game_id)
                         updated_count += 1
                 db.update_game(
                     game_id,
-                    home_away=home_away,
-                    opponent=opponent_name,
-                    team_score=tech_score,
-                    opponent_score=opponent_score,
-                    team_record=tech_record,
-                    opponent_record=opponent_record,
-                    result_status=win_loss,
-                    notes=notes
+                    home_away=game_data["home_away"],
+                    opponent=game_data["opponent"],
+                    team_score=game_data["team_score"],
+                    opponent_score=game_data["opponent_score"],
+                    team_record=game_data["team_record"],
+                    opponent_record=game_data["opponent_record"],
+                    result_status=game_data["result_status"],
+                    notes=game_data["notes"]
                 )
             else:
                 logging.info(f"Game {game_id} vs {opponent_name} ({sport}) already up-to-date; skipping.")
             continue
 
-        new_post = set_post(
-            seasonal_sports[sport]["emoji"],
-            opponent_name,
-            win_loss,
-            tech_score,
-            opponent_score,
-            separator,
-            notes,
-            tech_record,
-            opponent_record
-        )
-
         if testing:
-            logging.info(f"TEST MODE - Would create post:\n{new_post}")
+            logging.info(f"TEST MODE - Would create post:\n{post_text}")
             post_id = f"TEST_{game_id}"
             created_count += 1
         else:
             try:
-                response = client.create_tweet(text=new_post)
+                response = client.create_tweet(text=post_text)
                 post_id = response.data["id"]
                 tweet_url = f"https://twitter.com/user/status/{post_id}"
-                logging.info(f"Link:\n{tweet_url}\nTweet:\n{new_post}")
-                tweet_alerts.send_tweet_notification(tweet_url, new_post)
+                logging.info(f"Link:\n{tweet_url}\nTweet:\n{post_text}")
+                tweet_alerts.send_tweet_notification(tweet_url, post_text)
                 created_count += 1
             except Exception as e:
                 logging.error(f"Failed creating post for game {game_id}: {e}")
                 post_id = None
 
-        db.insert_game({
-            "game_id": game_id,
-            "sport": sport,
-            "date": str(game_date),
-            "time": time,
-            "opponent": opponent_name,
-            "home_away": home_away,
-            "result_status": win_loss,
-            "team_score": tech_score,
-            "opponent_score": opponent_score,
-            "team_record": tech_record,
-            "opponent_record": opponent_record,
-            "notes": notes,
-            "post_id": post_id,
-            "post_text": new_post,
-        })
+        game_data["post_id"] = post_id
+        game_data["post_text"] = post_text
+        db.insert_game(game_data)
 
     return created_count, updated_count
 

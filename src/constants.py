@@ -68,10 +68,10 @@ seasons = [
 now = current_date.replace(year=Y)
 season = next(s for s, (start, end) in seasons if start <= now <= end)
 # Sport info
-tweet_team="Louisiana Tech"
+tweet_team = "Louisiana Tech"
 tech_ids = {"LTU", "LATech", "TECH"}
-tech_names={"Louisiana Tech","LA Tech","TECH","LA TECH","LOUISIANA TECH","LATECH"}
-url="https://latechsports.com"
+tech_names = {"louisiana tech", "la tech", "tech", "latech"}
+url = "https://latechsports.com"
 sports={
     "football":{
         "emoji":"🏈",

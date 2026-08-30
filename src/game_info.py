@@ -1,4 +1,5 @@
 # Game Info
+from datetime import datetime
 import re
 import constants
 
@@ -36,4 +37,67 @@ def get_overall_record(record: str) -> str:
 def nan_time_to_time(time) -> str:
     if time is None or time != time:
         return "None"
-    return str(time)
+    return str(time)
+
+def extract_game_details(game: dict, sport: str, results_data: dict) -> dict | None:
+    result = game.get("result") or {}
+    opponent_name = game.get("opponent", {}).get("title", "")
+    game_id = str(game["id"])
+    game_date = str(datetime.fromisoformat(game["date"]).date())
+    time = nan_time_to_time(game.get("time"))
+    home_away = game.get("atVs", "")
+    notes = result.get("postscoreInfo", "")
+
+    win_loss = results_data.get("resultStatus", "")
+    boxscore = results_data.get("boxscore")
+
+    if boxscore is not None:
+        home = boxscore.get("home", {})
+        away = boxscore.get("away", {})
+        home_id = home.get("id", "")
+        home_name = home.get("name", "").lower()
+        if home_id in constants.tech_ids or home_name in constants.tech_names:
+            tech_team = home
+            opponent_team = away
+        else:
+            tech_team = away
+            opponent_team = home
+
+        tech_score = str(tech_team.get("score", ""))
+        opponent_score = str(opponent_team.get("score", ""))
+        tech_record = get_overall_record(tech_team.get("record", ""))
+        opponent_record = get_overall_record(opponent_team.get("record", ""))
+    else:
+        tech_record = ""
+        opponent_record = ""
+        tech_score = (
+            result.get("teamScore")
+            or result.get("postscoreInfo")
+            or result.get("prescoreInfo")
+            or ""
+        )
+        if not tech_score:
+            return None
+        opponent_score = str(result.get("opponentScore", ""))
+
+        if sport in constants.TRACK_AND_FIELD_SPORTS:
+            parts = [part.strip() for part in str(tech_score).split(";")]
+            index = 0 if sport in {"mens-track-and-field", "mens-cross-country"} else 1
+            if len(parts) > index and len(parts[index].split()) > 1:
+                tech_score = parts[index].split()[1]
+
+    return {
+        "game_id": game_id,
+        "sport": sport,
+        "date": game_date,
+        "time": time,
+        "opponent": opponent_name,
+        "home_away": home_away,
+        "result_status": win_loss,
+        "team_score": str(tech_score),
+        "opponent_score": str(opponent_score),
+        "team_record": tech_record,
+        "opponent_record": opponent_record,
+        "notes": notes
+    }
+

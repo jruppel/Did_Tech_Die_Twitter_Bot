@@ -42,15 +42,6 @@ class Database:
                 .where(self.games.columns.game_id == str(game_id))
             ).fetchone()
 
-    def get_all_game_data(self):
-        with self.engine.begin() as connection:
-            return connection.execute(
-                db.select(self.games)
-            ).fetchall()
-
-    def has_game(self, game_id):
-        return self.get_game_data(game_id) is not None
-
     def has_game_changed(self, existing, game):
         if existing is None:
             return False
@@ -116,14 +107,6 @@ class Database:
                 .values(**kwargs)
             )
 
-    def has_post(self, game_id, existing=None):
-        if existing is not None:
-            return existing.post_id is not None
-        game = self.get_game_data(game_id)
-        if game is None:
-            return False
-        return game.post_id is not None
-
     def mark_posted(self, game_id, post_id, post_text):
         with self.engine.begin() as connection:
             connection.execute(
@@ -137,26 +120,6 @@ class Database:
                 )
             )
         logging.info(f"Marked game {game_id} as posted")
-
-    def clear_post(self, game_id):
-        with self.engine.begin() as connection:
-            connection.execute(
-                db.update(self.games)
-                .where(self.games.columns.game_id == str(game_id))
-                .values(
-                    post_id=None,
-                    post_text=None,
-                    last_updated_at=utc_now()
-                )
-            )
-        logging.info(f"Cleared post for {game_id}")
-
-    def get_unposted_games(self):
-        with self.engine.begin() as connection:
-            return connection.execute(
-                db.select(self.games)
-                .where(self.games.columns.post_id.is_(None))
-            ).fetchall()
 
     def increment_correction_count(self, game_id):
         with self.engine.begin() as connection:
