@@ -94,7 +94,7 @@ def get_results_data(sport_id: int, game_id: str):
     try:
         response = session.get(results_url, timeout=REQUEST_TIMEOUT)
         if response.status_code == 204:
-            logging.debug(f"No results posted yet for game ID {game_id} (HTTP 204).")
+            logging.debug(f"No results posted yet for game ID {game_id}. Status code: {response.status_code}")
             return None
         if response.status_code != 200:
             logging.warning(f"Failed to fetch results for game ID {game_id}. Status code: {response.status_code}")

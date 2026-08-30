@@ -102,6 +102,7 @@ def process_games(sport):
         game_id = str(game.get("id", ""))
         results_data = web_scraping.get_results_data(sport_id, game_id)
         if not results_data:
+            logging.info(f"Game {game_id} vs {opponent_name} ({sport}) has no results posted yet; skipping.")
             continue
 
         game_data = game_info.extract_game_details(game, sport, results_data)
