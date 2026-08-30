@@ -8,9 +8,9 @@ testing = os.getenv("DID_TECH_DIE_TESTING", "false").lower() == "true"
 # DB info: in test mode uses local sqlite, in production reads NEON_DATABASE_URL
 sql_db = "sqlite:///gamedata.db" if testing else os.environ.get("NEON_DATABASE_URL", "")
 
-# Logging info
+# Logging info: DEBUG for local test runs, INFO for production
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.DEBUG if testing else logging.INFO,
     format='[%(asctime)s] {%(module)s:%(funcName)s:%(lineno)d} %(levelname)s - %(message)s',
     datefmt='%m-%d-%Y %H:%M:%S'
 )
