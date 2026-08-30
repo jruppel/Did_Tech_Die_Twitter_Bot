@@ -89,7 +89,10 @@ def process_games(sport):
     logging.info(f"Checking for recent {sport} games...")
     recent_games = web_scraping.get_sport_schedule_recent_games(sport_id, sport_year)
     if not recent_games:
-        return
+        return 0, 0
+
+    created_count = 0
+    updated_count = 0
 
     for game in recent_games:
         result = game.get("result")
@@ -137,6 +140,7 @@ def process_games(sport):
                 or ""
             )
             if not tech_score:
+                logging.info(f"Game {game_id} vs {opponent_name} ({sport}) has no final score yet; skipping.")
                 continue
             opponent_score = result.get("opponentScore", "")
 
@@ -162,7 +166,7 @@ def process_games(sport):
                 "notes": notes
             }
             if db.has_game_changed(existing_game, current_game):
-                logging.info(f"Game change detected for {game_id}")
+                logging.info(f"Game change detected for {game_id} vs {opponent_name}")
                 corrected_post = set_post(
                     seasonal_sports[sport]["emoji"],
                     opponent_name,
@@ -178,6 +182,7 @@ def process_games(sport):
                     if replace_post(game_id, corrected_post, old_post_id=existing_game.post_id):
                         logging.info(f"Replacing tweet {existing_game.post_id}")
                         db.increment_correction_count(game_id)
+                        updated_count += 1
                 db.update_game(
                     game_id,
                     home_away=home_away,
@@ -189,6 +194,8 @@ def process_games(sport):
                     result_status=win_loss,
                     notes=notes
                 )
+            else:
+                logging.info(f"Game {game_id} vs {opponent_name} ({sport}) already up-to-date; skipping.")
             continue
 
         new_post = set_post(
@@ -206,6 +213,7 @@ def process_games(sport):
         if testing:
             logging.info(f"TEST MODE - Would create post:\n{new_post}")
             post_id = f"TEST_{game_id}"
+            created_count += 1
         else:
             try:
                 response = client.create_tweet(text=new_post)
@@ -213,6 +221,7 @@ def process_games(sport):
                 tweet_url = f"https://twitter.com/user/status/{post_id}"
                 logging.info(f"Link:\n{tweet_url}\nTweet:\n{new_post}")
                 tweet_alerts.send_tweet_notification(tweet_url, new_post)
+                created_count += 1
             except Exception as e:
                 logging.error(f"Failed creating post for game {game_id}: {e}")
                 post_id = None
@@ -234,11 +243,17 @@ def process_games(sport):
             "post_text": new_post,
         })
 
+    return created_count, updated_count
+
 def main():
     logging.info("Starting Did Tech Die Twitter bot")
+    total_created = 0
+    total_updated = 0
     for sport in seasonal_sports:
-        process_games(sport)
-    logging.info("Ending Did Tech Die Twitter bot\n")
+        created, updated = process_games(sport)
+        total_created += created
+        total_updated += updated
+    logging.info(f"Run completed: {total_created} new tweets created, {total_updated} tweets updated.\n")
 
 if __name__ == "__main__":
     main()
