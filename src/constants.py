@@ -1,63 +1,72 @@
 from datetime import date, timedelta
 import logging
-import tweepy
 import os
+import tweepy
 
 testing = os.getenv("DID_TECH_DIE_TESTING", "false").lower() == "true"
 
-#DB info
-sql_db=os.environ["NEON_DATABASE_URL"]
+# DB info: in test mode uses local sqlite, in production reads NEON_DATABASE_URL
+sql_db = "sqlite:///gamedata.db" if testing else os.environ.get("NEON_DATABASE_URL", "")
 
-#Logging info
+# Logging info
 logging.basicConfig(
-     level=logging.DEBUG,
-     format= '[%(asctime)s] {%(module)s:%(funcName)s:%(lineno)d} %(levelname)s - %(message)s',
-     datefmt='%m-%d-%Y %H:%M:%S'
- )
+    level=logging.DEBUG,
+    format='[%(asctime)s] {%(module)s:%(funcName)s:%(lineno)d} %(levelname)s - %(message)s',
+    datefmt='%m-%d-%Y %H:%M:%S'
+)
 
-#Main Twitter API
-credentials={
-'consumer_key':os.environ["X_CONSUMER_KEY"],
-'consumer_secret':os.environ["X_CONSUMER_SECRET"],
-'access_token':os.environ["X_ACCESS_TOKEN"],
-'access_token_secret':os.environ["X_ACCESS_TOKEN_SECRET"],
-'bearer_token':os.environ["X_BEARER_TOKEN"]
+# Main Twitter API
+credentials = {
+    'consumer_key': os.environ.get("X_CONSUMER_KEY", ""),
+    'consumer_secret': os.environ.get("X_CONSUMER_SECRET", ""),
+    'access_token': os.environ.get("X_ACCESS_TOKEN", ""),
+    'access_token_secret': os.environ.get("X_ACCESS_TOKEN_SECRET", ""),
+    'bearer_token': os.environ.get("X_BEARER_TOKEN", "")
 }
 
-client=tweepy.Client(bearer_token=credentials['bearer_token'],consumer_key=credentials['consumer_key'],  
-                    consumer_secret=credentials['consumer_secret'],access_token=credentials['access_token'],
-                    access_token_secret=credentials['access_token_secret'],wait_on_rate_limit=True)      
+client = tweepy.Client(
+    bearer_token=credentials['bearer_token'],
+    consumer_key=credentials['consumer_key'],
+    consumer_secret=credentials['consumer_secret'],
+    access_token=credentials['access_token'],
+    access_token_secret=credentials['access_token_secret'],
+    wait_on_rate_limit=True
+)
 
-#Ntfy info for alerts
-ntfy_url="https://ntfy.sh/"
-ntfy_tweet_alerts_topic="did_tech_die_tweets"
+# Ntfy info for alerts
+ntfy_url = "https://ntfy.sh/"
+ntfy_tweet_alerts_topic = "did_tech_die_tweets"
 
-#Headers for requests
+# Headers for requests
 HEADERS = {
     "tenant": "latech",
     "User-Agent": "DidTechDieBot/1.0"
 }
 
 # Date/time info
-current_date=date.today()
-yesterday_date=current_date-timedelta(days=1)
-two_days_ago_date=current_date-timedelta(days=2)
-year=current_date.year
-last_year=year-1
-next_year=year+1
-if date(year,1,1)<=current_date<=date(year,6,20):
-    biannual_year="{}-{}".format(str(last_year),str(year)[2:])
-if date(year,6,21)<=current_date<=date(year,12,31):
-    biannual_year="{}-{}".format(str(year),str(next_year)[2:])
+current_date = date.today()
+yesterday_date = current_date - timedelta(days=1)
+two_days_ago_date = current_date - timedelta(days=2)
+year = current_date.year
+last_year = year - 1
+next_year = year + 1
+
+if current_date <= date(year, 6, 20):
+    biannual_year = f"{last_year}-{str(year)[2:]}"
+else:
+    biannual_year = f"{year}-{str(next_year)[2:]}"
+
 # Season info
-Y=2000 # dummy leap year to allow input X-02-29 (leap day)
-seasons=[('winter',(date(Y,1,1),date(Y,3,20))),
-    ('spring',(date(Y,3,21),date(Y,6,20))),
-    ('summer',(date(Y,6,21),date(Y,9,22))),
-    ('autumn',(date(Y,9,23),date(Y,12,20))),
-    ('winter',(date(Y,12,21),date(Y,12,31)))]
-now=current_date.replace(year=Y)
-season=next(season for season,(start,end) in seasons if start<=now<=end)
+Y = 2000  # dummy leap year to allow input X-02-29 (leap day)
+seasons = [
+    ('winter', (date(Y, 1, 1), date(Y, 3, 20))),
+    ('spring', (date(Y, 3, 21), date(Y, 6, 20))),
+    ('summer', (date(Y, 6, 21), date(Y, 9, 22))),
+    ('autumn', (date(Y, 9, 23), date(Y, 12, 20))),
+    ('winter', (date(Y, 12, 21), date(Y, 12, 31)))
+]
+now = current_date.replace(year=Y)
+season = next(s for s, (start, end) in seasons if start <= now <= end)
 # Sport info
 tweet_team="Louisiana Tech"
 tech_ids = {"LTU", "LATech", "TECH"}
