@@ -99,17 +99,18 @@ def process_games(sport):
         if game_info.is_game_exhibition(opponent_name):
             continue
 
-        game_id = str(game.get("id", ""))
-        results_data = web_scraping.get_results_data(sport_id, game_id)
+        raw_game_id = str(game.get("id", ""))
+        results_data = web_scraping.get_results_data(sport_id, raw_game_id)
         if not results_data:
-            logging.info(f"Game {game_id} vs {opponent_name} ({sport}) has no results posted yet; skipping.")
+            logging.info(f"Game {raw_game_id} vs {opponent_name} ({sport}) has no results posted yet; skipping.")
             continue
 
         game_data = game_info.extract_game_details(game, sport, results_data)
         if not game_data:
-            logging.info(f"Game {game_id} vs {opponent_name} ({sport}) has no final score yet; skipping.")
+            logging.info(f"Game {raw_game_id} vs {opponent_name} ({sport}) has no final score yet; skipping.")
             continue
 
+        game_id = game_data["game_id"]
         win_loss = game_data["result_status"]
         separator = get_separator(win_loss)
         post_text = set_post(
@@ -181,4 +182,4 @@ def main():
     logging.info(f"Run completed: {total_created} new tweets created, {total_updated} tweets updated.\n")
 
 if __name__ == "__main__":
-    main()
+    main()

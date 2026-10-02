@@ -39,10 +39,34 @@ def nan_time_to_time(time) -> str:
         return "None"
     return str(time)
 
+def extract_track_score(raw_score: str, sport: str) -> str | None:
+    if not raw_score:
+        return None
+    raw_score = raw_score.strip()
+    is_men = sport in {"mens-track-and-field", "mens-cross-country"}
+
+    men_pattern = r'\bM(?:en)?(?::|\s)\s*([^\s;:,]+)'
+    women_pattern = r'\bW(?:omen)?(?::|\s)\s*([^\s;:,]+)'
+
+    target_pattern = men_pattern if is_men else women_pattern
+    other_pattern = women_pattern if is_men else men_pattern
+
+    target_match = re.search(target_pattern, raw_score, re.IGNORECASE)
+    if target_match:
+        return target_match.group(1).strip()
+
+    other_match = re.search(other_pattern, raw_score, re.IGNORECASE)
+    if other_match:
+        return None
+
+    if raw_score.lower() in {"canceled", "cancelled", "postponed", "tbd", "none", ""}:
+        return None
+    return raw_score
+
 def extract_game_details(game: dict, sport: str, results_data: dict) -> dict | None:
     result = game.get("result") or {}
     opponent_name = game.get("opponent", {}).get("title", "")
-    game_id = str(game["id"])
+    raw_game_id = str(game["id"])
     game_date = str(datetime.fromisoformat(game["date"]).date())
     time = nan_time_to_time(game.get("time"))
     home_away = game.get("atVs", "")
@@ -81,10 +105,12 @@ def extract_game_details(game: dict, sport: str, results_data: dict) -> dict | N
         opponent_score = str(result.get("opponentScore", ""))
 
         if sport in constants.TRACK_AND_FIELD_SPORTS:
-            parts = [part.strip() for part in str(tech_score).split(";")]
-            index = 0 if sport in {"mens-track-and-field", "mens-cross-country"} else 1
-            if len(parts) > index and len(parts[index].split()) > 1:
-                tech_score = parts[index].split()[1]
+            parsed_score = extract_track_score(str(tech_score), sport)
+            if not parsed_score:
+                return None
+            tech_score = parsed_score
+
+    game_id = f"{raw_game_id}_{sport}" if sport in constants.TRACK_AND_FIELD_SPORTS else raw_game_id
 
     return {
         "game_id": game_id,
@@ -100,4 +126,3 @@ def extract_game_details(game: dict, sport: str, results_data: dict) -> dict | N
         "opponent_record": opponent_record,
         "notes": notes
     }
-
